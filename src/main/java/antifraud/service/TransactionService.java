@@ -11,6 +11,7 @@ import antifraud.model.Transaction;
 import antifraud.repo.StolenCardRepo;
 import antifraud.repo.SuspiciousIpRepo;
 import antifraud.repo.TransactionRepo;
+import antifraud.service.utils.VerificationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class TransactionService {
     public ResponseEntity<TransactionResponseDTO> addTransaction(TransactionRequestDTO transactionDTO) {
         // Validate input
         if (transactionDTO.getAmount() <= 0 ||
-                VerificationUtil.isCardNumberInvalid(transactionDTO.getNumber()) ||
+                !VerificationUtil.isCardNumberValid(transactionDTO.getNumber()) ||
                 !isValidRegion(transactionDTO.getRegion())) {
             return ResponseEntity.badRequest().build();
         }
@@ -182,7 +183,7 @@ public class TransactionService {
             return ResponseEntity.badRequest().build();
         }
 
-        if (VerificationUtil.isCardNumberInvalid(number)) {
+        if (!VerificationUtil.isCardNumberValid(number)) {
             return ResponseEntity.badRequest().build();
         }
 

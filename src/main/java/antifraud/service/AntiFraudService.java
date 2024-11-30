@@ -7,6 +7,7 @@ import antifraud.model.StolenCard;
 import antifraud.model.SuspiciousIp;
 import antifraud.repo.StolenCardRepo;
 import antifraud.repo.SuspiciousIpRepo;
+import antifraud.service.utils.VerificationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,7 +72,7 @@ public class AntiFraudService {
 
         StolenCard stolenCard = new StolenCard(stolenCardRequestDTO.getNumber());
 
-        if (VerificationUtil.isCardNumberInvalid(stolenCard.getNumber())) {
+        if (!VerificationUtil.isCardNumberValid(stolenCard.getNumber())) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -84,7 +85,7 @@ public class AntiFraudService {
             return ResponseEntity.badRequest().build();
         }
 
-        if (VerificationUtil.isCardNumberInvalid(number)) {
+        if (!VerificationUtil.isCardNumberValid(number)) {
             return ResponseEntity.badRequest().build();
         }
 
