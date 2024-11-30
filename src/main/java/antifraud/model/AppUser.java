@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 import java.util.HashSet;
 import java.util.Set;
 
+@Entity
 @Data
 @NoArgsConstructor
-@Entity
 public class AppUser {
 
     @Id
@@ -17,9 +17,7 @@ public class AppUser {
     private long id;
 
     private String name;
-
     private String username;
-
     private String password;
 
     @ManyToMany (fetch = FetchType.EAGER)

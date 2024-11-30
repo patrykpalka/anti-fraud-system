@@ -7,7 +7,7 @@ import antifraud.model.StolenCard;
 import antifraud.model.SuspiciousIp;
 import antifraud.repo.StolenCardRepo;
 import antifraud.repo.SuspiciousIpRepo;
-import antifraud.service.utils.VerificationUtil;
+import antifraud.service.utils.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+
+import static antifraud.service.utils.ValidationUtil.*;
 
 @Service
 @RequiredArgsConstructor
@@ -24,72 +26,71 @@ public class AntiFraudService {
     private final StolenCardRepo stolenCardRepo;
 
     public ResponseEntity<SuspiciousIp> addSuspiciousIp(SuspiciousIpRequestDTO suspiciousIpRequestDTO) {
-        Optional<SuspiciousIp> suspiciousIpOptional = suspiciousIpRepo.findByIp(suspiciousIpRequestDTO.getIp());
+        String ip = suspiciousIpRequestDTO.getIp();
 
-        if (suspiciousIpOptional.isPresent()) {
+        if (!isValidIp(ip)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (suspiciousIpRepo.findByIp(ip).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        SuspiciousIp suspiciousIp = new SuspiciousIp(suspiciousIpRequestDTO.getIp());
+        SuspiciousIp suspiciousIp = suspiciousIpRequestDTO.toSuspiciousIp();
         suspiciousIpRepo.save(suspiciousIp);
 
         return ResponseEntity.ok(suspiciousIp);
     }
 
-    public ResponseEntity<AntiFraudDeletionResponseDTO> removeSuspiciousIp(String requestIp) {
-        String validIp = "^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\\." +
-                "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\\." +
-                "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\\." +
-                "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])$";
+    public ResponseEntity<StolenCard> addStolenCard(StolenCardRequestDTO stolenCardRequestDTO) {
+        String number = stolenCardRequestDTO.getNumber();
 
-        if (!requestIp.matches(validIp)) {
+        if (!isValidCardNumber(number)) {
             return ResponseEntity.badRequest().build();
         }
 
-        Optional<SuspiciousIp> ipOptional = suspiciousIpRepo.findByIp(requestIp);
+        if (stolenCardRepo.findByNumber(number).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
 
-        if (ipOptional.isEmpty()) {
+        StolenCard stolenCard = stolenCardRequestDTO.toStolenCard();
+        stolenCardRepo.save(stolenCard);
+
+        return ResponseEntity.ok(stolenCard);
+    }
+
+    public ResponseEntity<List<SuspiciousIp>> getSuspiciousIps() {
+        return ResponseEntity.ok(suspiciousIpRepo.findAllByOrderByIdAsc());
+    }
+
+    public ResponseEntity<List<StolenCard>> getStolenCards() {
+        return ResponseEntity.ok(stolenCardRepo.findAllByOrderByIdAsc());
+    }
+
+    public ResponseEntity<AntiFraudDeletionResponseDTO> removeSuspiciousIp(String requestIp) {
+        if (!isValidIp(requestIp)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Optional<SuspiciousIp> suspiciousIpOptional = suspiciousIpRepo.findByIp(requestIp);
+
+        if (suspiciousIpOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        SuspiciousIp suspiciousIp = ipOptional.get();
+        SuspiciousIp suspiciousIp = suspiciousIpOptional.get();
         suspiciousIpRepo.delete(suspiciousIp);
 
         return ResponseEntity.ok(new AntiFraudDeletionResponseDTO(suspiciousIp));
     }
 
-    public ResponseEntity<List<SuspiciousIp>> getSuspiciousIps() {
-        List<SuspiciousIp> suspiciousIpList = suspiciousIpRepo.findAllByOrderByIdAsc();
-        return ResponseEntity.ok(suspiciousIpList);
-    }
-
-    public ResponseEntity<StolenCard> addStolenCard(StolenCardRequestDTO stolenCardRequestDTO) {
-        Optional<StolenCard> stolenCardOptional = stolenCardRepo.findByNumber(stolenCardRequestDTO.getNumber());
-
-        if (stolenCardOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-
-        StolenCard stolenCard = new StolenCard(stolenCardRequestDTO.getNumber());
-
-        if (!VerificationUtil.isCardNumberValid(stolenCard.getNumber())) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        stolenCardRepo.save(stolenCard);
-        return ResponseEntity.ok(stolenCard);
-    }
-
     public ResponseEntity<AntiFraudDeletionResponseDTO> removeStolenCard(String number) {
-        if (!number.matches("\\d{16}")) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        if (!VerificationUtil.isCardNumberValid(number)) {
+        if (!isValidCardNumber(number)) {
             return ResponseEntity.badRequest().build();
         }
 
         Optional<StolenCard> stolenCardOptional = stolenCardRepo.findByNumber(number);
+
         if (stolenCardOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -98,10 +99,5 @@ public class AntiFraudService {
         stolenCardRepo.delete(stolenCard);
 
         return ResponseEntity.ok(new AntiFraudDeletionResponseDTO(stolenCard));
-    }
-
-    public ResponseEntity<List<StolenCard>> removeStolenCard() {
-        List<StolenCard> stolenCardList = stolenCardRepo.findAllByOrderByIdAsc();
-        return ResponseEntity.ok(stolenCardList);
     }
 }

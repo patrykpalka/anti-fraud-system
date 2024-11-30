@@ -70,12 +70,13 @@ public class UserService {
     }
 
     public ResponseEntity<UserDeletionResponseDTO> deleteUser(String username) {
-        Optional<AppUser> userOpt = appUserRepo.findByUsername(username);
-        if (userOpt.isEmpty()) {
+        Optional<AppUser> userOptional = appUserRepo.findByUsername(username);
+
+        if (userOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        appUserRepo.delete(userOpt.get());
+        appUserRepo.delete(userOptional.get());
         return ResponseEntity.ok(UserDeletionResponseDTO.ofDeletion(username));
     }
 
@@ -91,12 +92,12 @@ public class UserService {
         }
 
         // Find user
-        Optional<AppUser> userOpt = appUserRepo.findByUsername(roleRequest.getUsername());
-        if (userOpt.isEmpty()) {
+        Optional<AppUser> userOptional = appUserRepo.findByUsername(roleRequest.getUsername());
+        if (userOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        AppUser user = userOpt.get();
+        AppUser user = userOptional.get();
         String currentRole = user.getRoles().iterator().next().getName().substring(5);
         String newRole = roleRequest.getRole();
 
@@ -115,12 +116,12 @@ public class UserService {
     }
 
     public ResponseEntity<OperationResponseDTO> changeLockedStatus(UserStatusRequestDTO statusRequest) {
-        Optional<AppUser> userOpt = appUserRepo.findByUsername(statusRequest.getUsername());
-        if (userOpt.isEmpty()) {
+        Optional<AppUser> userOptional = appUserRepo.findByUsername(statusRequest.getUsername());
+        if (userOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        AppUser user = userOpt.get();
+        AppUser user = userOptional.get();
 
         // Cannot lock/unlock administrator
         if (user.getRoles().contains(roleRepo.findByName(RoleNames.ROLE_ADMINISTRATOR.toString()))) {

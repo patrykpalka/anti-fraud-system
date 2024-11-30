@@ -9,10 +9,11 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Entity
 @Data
 @NoArgsConstructor
-@Entity
 public class StolenCard {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

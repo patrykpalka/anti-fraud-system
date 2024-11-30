@@ -1,5 +1,6 @@
 package antifraud.dto.request;
 
+import antifraud.model.SuspiciousIp;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
@@ -16,4 +17,8 @@ public class SuspiciousIpRequestDTO {
             "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\\." +
             "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])$")
     private String ip;
+
+    public SuspiciousIp toSuspiciousIp() {
+        return new SuspiciousIp(ip);
+    }
 }

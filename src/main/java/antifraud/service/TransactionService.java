@@ -1,167 +1,93 @@
 package antifraud.service;
 
-import antifraud.constants.Constants;
 import antifraud.dto.request.FeedbackRequestDTO;
 import antifraud.dto.response.FeedbackResponseDTO;
 import antifraud.dto.transaction.TransactionRequestDTO;
 import antifraud.dto.transaction.TransactionResponseDTO;
-import antifraud.enums.RegionNames;
 import antifraud.enums.TransactionType;
 import antifraud.model.Transaction;
 import antifraud.repo.StolenCardRepo;
 import antifraud.repo.SuspiciousIpRepo;
 import antifraud.repo.TransactionRepo;
-import antifraud.service.utils.VerificationUtil;
+import antifraud.service.utils.ValidationUtil;
+import antifraud.validation.transaction.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static antifraud.constants.ConstantsUtil.updateTransactionLimit;
+import static antifraud.service.utils.ValidationUtil.*;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
 
+    private final TransactionRepo transactionRepo;
     private final SuspiciousIpRepo suspiciousIpRepo;
     private final StolenCardRepo stolenCardRepo;
-    private final TransactionRepo transactionRepo;
 
     public ResponseEntity<TransactionResponseDTO> addTransaction(TransactionRequestDTO transactionDTO) {
-        // Validate input
-        if (transactionDTO.getAmount() <= 0 ||
-                !VerificationUtil.isCardNumberValid(transactionDTO.getNumber()) ||
-                !isValidRegion(transactionDTO.getRegion())) {
+        if (!isValidTransactionInput(transactionDTO)) {
             return ResponseEntity.badRequest().build();
         }
 
-        // Initialize variables
-        TransactionType type = TransactionType.ALLOWED;
-        List<String> reasons = new ArrayList<>();
+        List<String> reasonsForRejection = new ArrayList<>();
+        String type = reviewTransaction(transactionDTO, reasonsForRejection);
 
-        // Check suspicious IPs and stolen cards
-        if (suspiciousIpRepo.findAllIps().contains(transactionDTO.getIp())) {
-            type = TransactionType.PROHIBITED;
-            reasons.add("ip");
-        }
-
-        if (stolenCardRepo.findAllCardNumbers().contains(transactionDTO.getNumber())) {
-            type = TransactionType.PROHIBITED;
-            reasons.add("card-number");
-        }
-
-        // Analyze transaction history for correlations
-        LocalDateTime requestTime = transactionDTO.getDate();
-        LocalDateTime oneHourAgo = requestTime.minusHours(1);
-        List<Transaction> recentTransactions = transactionRepo
-                .findAllByDateGreaterThanEqualAndDateLessThanAndNumber(oneHourAgo, requestTime, transactionDTO.getNumber());
-
-        // IP correlation
-        Set<String> distinctIps = recentTransactions.stream()
-                .map(Transaction::getIp)
-                .filter(ip -> !ip.equals(transactionDTO.getIp()))  // Exclude current IP
-                .collect(Collectors.toSet());
-
-        if (distinctIps.size() > 2) {
-            type = TransactionType.PROHIBITED;
-            reasons.add("ip-correlation");
-        } else if (distinctIps.size() == 2) {
-            if (type != TransactionType.PROHIBITED) {
-                type = TransactionType.MANUAL_PROCESSING;
-            }
-            reasons.add("ip-correlation");
-        }
-
-        // Region correlation
-        Set<String> distinctRegions = recentTransactions.stream()
-                .map(Transaction::getRegion)
-                .filter(region -> !region.equals(transactionDTO.getRegion()))  // Exclude current region
-                .collect(Collectors.toSet());
-
-        if (distinctRegions.size() > 2) {
-            type = TransactionType.PROHIBITED;
-            reasons.add("region-correlation");
-        } else if (distinctRegions.size() == 2 && type == TransactionType.ALLOWED) {
-            type = TransactionType.MANUAL_PROCESSING;
-            reasons.add("region-correlation");
-        }
-
-        // Check transaction amount
-        if (transactionDTO.getAmount() > Constants.MAX_MANUAL_PROCESSING) {
-            type = TransactionType.PROHIBITED;
-            reasons.add("amount");
-        } else if (transactionDTO.getAmount() > Constants.MAX_ALLOWED && reasons.isEmpty()) {
-            type = TransactionType.MANUAL_PROCESSING;
-            reasons.add("amount");
-        }
-
-        // Save transaction
         Transaction transaction = transactionDTO.getTransaction();
-        transaction.setResult(type.toString());
+        transaction.setResult(type);
         transactionRepo.save(transaction);
 
-        // Prepare response
-        String info = reasons.isEmpty() ? "none" : reasons.stream().sorted().collect(Collectors.joining(", "));
-        return ResponseEntity.ok(new TransactionResponseDTO(type.toString(), info));
+        String info = reasonsForRejection.isEmpty() ? "none" : reasonsForRejection.stream().sorted().collect(Collectors.joining(", "));
+        return ResponseEntity.ok(new TransactionResponseDTO(type, info));
     }
 
-    private boolean isValidRegion(String region) {
-        return Arrays.stream(RegionNames.values()).anyMatch(r -> r.name().equals(region));
+    private String reviewTransaction(TransactionRequestDTO dto, List<String> reasons) {
+        List<TransactionValidator> validators = List.of(
+                new SuspiciousIpValidator(suspiciousIpRepo),
+                new StolenCardValidator(stolenCardRepo),
+                new IpCorrelationValidator(transactionRepo),
+                new RegionCorrelationValidator(transactionRepo),
+                new AmountValidator()
+        );
+
+        TransactionType type = TransactionType.ALLOWED;
+
+        for (TransactionValidator validator : validators) {
+            type = validator.validate(dto, reasons, type);
+        }
+
+        return type.toString();
     }
 
     public ResponseEntity<FeedbackResponseDTO> addFeedback(FeedbackRequestDTO feedbackDTO) {
         Optional<Transaction> transactionOptional = transactionRepo.getById(feedbackDTO.getTransactionId());
+
         if (transactionOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
         Transaction transaction = transactionOptional.get();
 
         if (transaction.getFeedback() != null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        if (transaction.getResult().equals(feedbackDTO.getFeedback())) {
+        String feedback = feedbackDTO.getFeedback();
+        if (transaction.getResult().equals(feedback)) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).build();
         }
 
-        TransactionType feedbackTransactionType = TransactionType.valueOf(feedbackDTO.getFeedback());
-        TransactionType resultTransactionType = TransactionType.valueOf(transaction.getResult());
-        long amount = transaction.getAmount();
+        updateTransactionLimit(feedback, transaction);
 
-        if (feedbackTransactionType == TransactionType.ALLOWED) {
-            if (resultTransactionType == TransactionType.MANUAL_PROCESSING) {
-                Constants.MAX_ALLOWED = calculateNewLimit(Constants.MAX_ALLOWED, amount, true);
-            } else if (resultTransactionType == TransactionType.PROHIBITED) {
-                Constants.MAX_ALLOWED = calculateNewLimit(Constants.MAX_ALLOWED, amount, true);
-                Constants.MAX_MANUAL_PROCESSING = calculateNewLimit(Constants.MAX_MANUAL_PROCESSING, amount, true);
-            }
-        } else if (feedbackTransactionType == TransactionType.MANUAL_PROCESSING) {
-            if (resultTransactionType == TransactionType.ALLOWED) {
-                Constants.MAX_ALLOWED = calculateNewLimit(Constants.MAX_ALLOWED, amount, false);
-            } else if (resultTransactionType == TransactionType.PROHIBITED) {
-                Constants.MAX_MANUAL_PROCESSING = calculateNewLimit(Constants.MAX_MANUAL_PROCESSING, amount, true);
-            }
-        } else if (feedbackTransactionType == TransactionType.PROHIBITED) {
-            if (resultTransactionType == TransactionType.ALLOWED) {
-                Constants.MAX_ALLOWED = calculateNewLimit(Constants.MAX_ALLOWED, amount, false);
-                Constants.MAX_MANUAL_PROCESSING = calculateNewLimit(Constants.MAX_MANUAL_PROCESSING, amount, false);
-            } else if (resultTransactionType == TransactionType.MANUAL_PROCESSING) {
-                Constants.MAX_MANUAL_PROCESSING = calculateNewLimit(Constants.MAX_MANUAL_PROCESSING, amount, false);
-            }
-        }
-
-        transaction.setFeedback(feedbackDTO.getFeedback());
+        transaction.setFeedback(feedback);
         transactionRepo.save(transaction);
 
         return ResponseEntity.ok(new FeedbackResponseDTO(transaction));
-    }
-
-    private long calculateNewLimit(long currentLimit, long valueFromTransaction, boolean increase) {
-        double factor = increase ? 1 : -1;
-        double updatedValue = 0.8 * currentLimit + factor * 0.2 * valueFromTransaction;
-        return (long) Math.ceil(updatedValue);
     }
 
     public ResponseEntity<?> getHistory() {
@@ -179,11 +105,7 @@ public class TransactionService {
     }
 
     public ResponseEntity<?> getHistoryByNumber(String number) {
-        if (!number.matches("\\d{16}")) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        if (!VerificationUtil.isCardNumberValid(number)) {
+        if (!ValidationUtil.isValidCardNumber(number)) {
             return ResponseEntity.badRequest().build();
         }
 
