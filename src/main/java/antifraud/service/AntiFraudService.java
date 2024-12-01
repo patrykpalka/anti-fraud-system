@@ -3,6 +3,9 @@ package antifraud.service;
 import antifraud.dto.request.SuspiciousIpRequestDTO;
 import antifraud.dto.request.StolenCardRequestDTO;
 import antifraud.dto.response.AntiFraudDeletionResponseDTO;
+import antifraud.exception.BadRequestException;
+import antifraud.exception.ConflictException;
+import antifraud.exception.NotFoundException;
 import antifraud.model.StolenCard;
 import antifraud.model.SuspiciousIp;
 import antifraud.repo.StolenCardRepo;
@@ -29,11 +32,11 @@ public class AntiFraudService {
         String ip = suspiciousIpRequestDTO.getIp();
 
         if (!isValidIp(ip)) {
-            return ResponseEntity.badRequest().build();
+            throw new BadRequestException("Invalid IP address");
         }
 
         if (suspiciousIpRepo.findByIp(ip).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            throw new ConflictException("This IP address is already in use");
         }
 
         SuspiciousIp suspiciousIp = suspiciousIpRequestDTO.toSuspiciousIp();
@@ -46,11 +49,11 @@ public class AntiFraudService {
         String number = stolenCardRequestDTO.getNumber();
 
         if (!isValidCardNumber(number)) {
-            return ResponseEntity.badRequest().build();
+            throw new BadRequestException("Invalid card number");
         }
 
         if (stolenCardRepo.findByNumber(number).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            throw new ConflictException("This number is already in use");
         }
 
         StolenCard stolenCard = stolenCardRequestDTO.toStolenCard();
@@ -69,13 +72,13 @@ public class AntiFraudService {
 
     public ResponseEntity<AntiFraudDeletionResponseDTO> removeSuspiciousIp(String requestIp) {
         if (!isValidIp(requestIp)) {
-            return ResponseEntity.badRequest().build();
+            throw new BadRequestException("Invalid IP address");
         }
 
         Optional<SuspiciousIp> suspiciousIpOptional = suspiciousIpRepo.findByIp(requestIp);
 
         if (suspiciousIpOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new NotFoundException("Suspicious ip not found");
         }
 
         SuspiciousIp suspiciousIp = suspiciousIpOptional.get();
@@ -86,13 +89,13 @@ public class AntiFraudService {
 
     public ResponseEntity<AntiFraudDeletionResponseDTO> removeStolenCard(String number) {
         if (!isValidCardNumber(number)) {
-            return ResponseEntity.badRequest().build();
+            throw new BadRequestException("Invalid card number");
         }
 
         Optional<StolenCard> stolenCardOptional = stolenCardRepo.findByNumber(number);
 
         if (stolenCardOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new NotFoundException("Stolen Card not found");
         }
 
         StolenCard stolenCard = stolenCardOptional.get();

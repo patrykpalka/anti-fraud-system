@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 public class TransactionController {
@@ -32,7 +34,7 @@ public class TransactionController {
     }
 
     @GetMapping("/api/antifraud/history/{number}")
-    public ResponseEntity<?> getHistoryByNumber(@PathVariable("number") String number) {
+    public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(@PathVariable("number") String number) {
         return transactionService.getHistoryByNumber(number);
     }
 }

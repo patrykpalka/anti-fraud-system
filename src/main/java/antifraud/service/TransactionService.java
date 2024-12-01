@@ -5,6 +5,7 @@ import antifraud.dto.response.FeedbackResponseDTO;
 import antifraud.dto.transaction.TransactionRequestDTO;
 import antifraud.dto.transaction.TransactionResponseDTO;
 import antifraud.enums.TransactionType;
+import antifraud.exception.*;
 import antifraud.model.Transaction;
 import antifraud.repo.StolenCardRepo;
 import antifraud.repo.SuspiciousIpRepo;
@@ -32,7 +33,7 @@ public class TransactionService {
 
     public ResponseEntity<TransactionResponseDTO> addTransaction(TransactionRequestDTO transactionDTO) {
         if (!isValidTransactionInput(transactionDTO)) {
-            return ResponseEntity.badRequest().build();
+            throw new BadRequestException("Invalid transaction input");
         }
 
         List<String> reasonsForRejection = new ArrayList<>();
@@ -68,18 +69,18 @@ public class TransactionService {
         Optional<Transaction> transactionOptional = transactionRepo.getById(feedbackDTO.getTransactionId());
 
         if (transactionOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new NotFoundException("Transaction not found");
         }
 
         Transaction transaction = transactionOptional.get();
 
         if (transaction.getFeedback() != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            throw new ConflictException("Transaction already has feedback");
         }
 
         String feedback = feedbackDTO.getFeedback();
         if (transaction.getResult().equals(feedback)) {
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).build();
+            throw new UnprocessableEntityException("Result and feedback cannot be the same");
         }
 
         updateTransactionLimit(feedback, transaction);
@@ -93,26 +94,20 @@ public class TransactionService {
     public ResponseEntity<?> getHistory() {
         List<Transaction> transactions = transactionRepo.findAllByOrderByIdAsc();
 
-        if (transactions.isEmpty()) {
-            return ResponseEntity.ok(Collections.emptyList());
-        }
-
-        List<FeedbackResponseDTO> transactionDTOs = transactions.stream()
+        return ResponseEntity.ok(transactions.isEmpty() ? Collections.emptyList() : transactions.stream()
                 .map(FeedbackResponseDTO::new)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(transactionDTOs);
+                .collect(Collectors.toList()));
     }
 
-    public ResponseEntity<?> getHistoryByNumber(String number) {
+    public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(String number) {
         if (!ValidationUtil.isValidCardNumber(number)) {
-            return ResponseEntity.badRequest().build();
+            throw new BadRequestException("Invalid card number");
         }
 
         List<Transaction> transactions = transactionRepo.findAllByNumberOrderByIdAsc(number);
 
         if (transactions.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new NotFoundException("Transaction not found");
         }
 
         List<FeedbackResponseDTO> transactionDTOs = transactions.stream()
