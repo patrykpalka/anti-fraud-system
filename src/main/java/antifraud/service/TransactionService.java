@@ -13,9 +13,9 @@ import antifraud.repo.TransactionRepo;
 import antifraud.service.utils.ValidationUtil;
 import antifraud.validation.transaction.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,6 +31,7 @@ public class TransactionService {
     private final SuspiciousIpRepo suspiciousIpRepo;
     private final StolenCardRepo stolenCardRepo;
 
+    @Transactional
     public ResponseEntity<TransactionResponseDTO> addTransaction(TransactionRequestDTO transactionDTO) {
         if (!isValidTransactionInput(transactionDTO)) {
             throw new BadRequestException("Invalid transaction input");
@@ -65,6 +66,7 @@ public class TransactionService {
         return type.toString();
     }
 
+    @Transactional
     public ResponseEntity<FeedbackResponseDTO> addFeedback(FeedbackRequestDTO feedbackDTO) {
         Optional<Transaction> transactionOptional = transactionRepo.getById(feedbackDTO.getTransactionId());
 
@@ -91,6 +93,7 @@ public class TransactionService {
         return ResponseEntity.ok(new FeedbackResponseDTO(transaction));
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getHistory() {
         List<Transaction> transactions = transactionRepo.findAllByOrderByIdAsc();
 
@@ -99,6 +102,7 @@ public class TransactionService {
                 .collect(Collectors.toList()));
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(String number) {
         if (!ValidationUtil.isValidCardNumber(number)) {
             throw new BadRequestException("Invalid card number");

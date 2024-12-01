@@ -10,11 +10,10 @@ import antifraud.model.StolenCard;
 import antifraud.model.SuspiciousIp;
 import antifraud.repo.StolenCardRepo;
 import antifraud.repo.SuspiciousIpRepo;
-import antifraud.service.utils.ValidationUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +27,7 @@ public class AntiFraudService {
     private final SuspiciousIpRepo suspiciousIpRepo;
     private final StolenCardRepo stolenCardRepo;
 
+    @Transactional
     public ResponseEntity<SuspiciousIp> addSuspiciousIp(SuspiciousIpRequestDTO suspiciousIpRequestDTO) {
         String ip = suspiciousIpRequestDTO.getIp();
 
@@ -45,6 +45,7 @@ public class AntiFraudService {
         return ResponseEntity.ok(suspiciousIp);
     }
 
+    @Transactional
     public ResponseEntity<StolenCard> addStolenCard(StolenCardRequestDTO stolenCardRequestDTO) {
         String number = stolenCardRequestDTO.getNumber();
 
@@ -62,14 +63,17 @@ public class AntiFraudService {
         return ResponseEntity.ok(stolenCard);
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<List<SuspiciousIp>> getSuspiciousIps() {
         return ResponseEntity.ok(suspiciousIpRepo.findAllByOrderByIdAsc());
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<List<StolenCard>> getStolenCards() {
         return ResponseEntity.ok(stolenCardRepo.findAllByOrderByIdAsc());
     }
 
+    @Transactional
     public ResponseEntity<AntiFraudDeletionResponseDTO> removeSuspiciousIp(String requestIp) {
         if (!isValidIp(requestIp)) {
             throw new BadRequestException("Invalid IP address");
@@ -87,6 +91,7 @@ public class AntiFraudService {
         return ResponseEntity.ok(new AntiFraudDeletionResponseDTO(suspiciousIp));
     }
 
+    @Transactional
     public ResponseEntity<AntiFraudDeletionResponseDTO> removeStolenCard(String number) {
         if (!isValidCardNumber(number)) {
             throw new BadRequestException("Invalid card number");

@@ -4,6 +4,7 @@ import antifraud.dto.transaction.TransactionRequestDTO;
 import antifraud.enums.TransactionType;
 import antifraud.model.Transaction;
 import antifraud.repo.TransactionRepo;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +19,7 @@ public abstract class AbstractCorrelationValidator implements TransactionValidat
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TransactionType validate(TransactionRequestDTO dto, List<String> reasons, TransactionType currentType) {
         // Fetch recent transactions within the past hour
         LocalDateTime requestTime = dto.getDate();

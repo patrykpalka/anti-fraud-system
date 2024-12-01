@@ -6,126 +6,111 @@ import antifraud.dto.request.UserStatusRequestDTO;
 import antifraud.dto.response.UserDeletionResponseDTO;
 import antifraud.dto.response.OperationResponseDTO;
 import antifraud.dto.response.UserResponseDTO;
-import antifraud.enums.RoleNames;
+import antifraud.exception.BadRequestException;
+import antifraud.exception.ConflictException;
+import antifraud.exception.NotFoundException;
 import antifraud.model.AppUser;
 import antifraud.model.Role;
 import antifraud.repo.AppUserRepo;
 import antifraud.repo.RoleRepo;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static antifraud.service.utils.ValidationUtil.*;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final AppUserRepo appUserRepo;
-    private final PasswordEncoder passwordEncoder;
     private final RoleRepo roleRepo;
+    private final AppUserService appUserService;
 
+    @Transactional(readOnly = true)
     public ResponseEntity<?> registerUser(UserRegistrationRequestDTO registration) {
-        // First validate that the username and password are not empty
-        if (registration.getUsername() == null || registration.getUsername().isBlank() ||
-                registration.getPassword() == null || registration.getPassword().isBlank()) {
-            return ResponseEntity.badRequest().build();
+        if (!isValidRegistrationInput(registration)) {
+            throw new BadRequestException("Username and password cannot be empty");
         }
 
         if (appUserRepo.findByUsername(registration.getUsername()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            throw new ConflictException("Username already exists");
         }
 
-        AppUser appUser = registration.toEntity(passwordEncoder);
+        AppUser registeredUser = appUserService.register(registration);
 
-        // Assign role
-        Role role;
-        if (appUserRepo.count() == 0) {
-            // First user gets ADMINISTRATOR role and unlocked status
-            role = roleRepo.findByName(RoleNames.ROLE_ADMINISTRATOR.toString());
-            appUser.setLocked(false);
-        } else {
-            // Subsequent users get MERCHANT role and locked status
-            role = roleRepo.findByName(RoleNames.ROLE_MERCHANT.toString());
-            appUser.setLocked(true);
-        }
-        appUser.getRoles().add(role);
-
-        AppUser savedUser = appUserRepo.save(appUser);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new UserResponseDTO(savedUser));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponseDTO(registeredUser));
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        List<AppUser> users = appUserRepo.findAllByOrderByIdAsc();
-        List<UserResponseDTO> userDTOs = users.stream()
+        List<UserResponseDTO> users = appUserRepo.findAllByOrderByIdAsc().stream()
                 .map(UserResponseDTO::new)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(userDTOs);
+
+        return ResponseEntity.ok(users);
     }
 
+    @Transactional
     public ResponseEntity<UserDeletionResponseDTO> deleteUser(String username) {
-        Optional<AppUser> userOptional = appUserRepo.findByUsername(username);
+        AppUser user = appUserRepo.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+        appUserRepo.delete(user);
 
-        appUserRepo.delete(userOptional.get());
         return ResponseEntity.ok(UserDeletionResponseDTO.ofDeletion(username));
     }
 
+    @Transactional
     public ResponseEntity<UserResponseDTO> changeRole(UserRoleRequestDTO roleRequest) {
-        // Verify role change is allowed
-        List<String> acceptedRoles = List.of(
-                RoleNames.SUPPORT.toString(),
-                RoleNames.MERCHANT.toString()
-        );
-
-        if (!acceptedRoles.contains(roleRequest.getRole())) {
-            return ResponseEntity.badRequest().build();
+        if (!isValidUserRoleChange(roleRequest.getRole())) {
+            throw new BadRequestException("Invalid role");
         }
 
-        // Find user
-        Optional<AppUser> userOptional = appUserRepo.findByUsername(roleRequest.getUsername());
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        AppUser user = appUserRepo.findByUsername(roleRequest.getUsername())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        String currentRoleName = getCurrentRoleName(user);
+        String requestedRoleName = roleRequest.getRole();
+
+        if (requestedRoleName.equals(currentRoleName)) {
+            throw new ConflictException("Role already exists");
         }
 
-        AppUser user = userOptional.get();
-        String currentRole = user.getRoles().iterator().next().getName().substring(5);
-        String newRole = roleRequest.getRole();
+        updateAndSaveRequestedRole(user, requestedRoleName);
 
-        // Check if role is different
-        if (newRole.equals(currentRole)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-
-        // Update role
-        Set<Role> roles = user.getRoles();
-        roles.clear();
-        roles.add(roleRepo.findByName("ROLE_" + newRole));
-
-        AppUser savedUser = appUserRepo.save(user);
-        return ResponseEntity.ok(new UserResponseDTO(savedUser));
+        return ResponseEntity.ok(new UserResponseDTO(user));
     }
 
+    private String getCurrentRoleName(AppUser user) {
+        return user.getRoles().stream()
+                .findFirst()
+                .map(role -> role.getName().substring(5))
+                .orElseThrow(() -> new NotFoundException("User has no roles assigned"));
+    }
+
+    private void updateAndSaveRequestedRole(AppUser user, String role) {
+        Role newRole = roleRepo.findByName("ROLE_" + role)
+                .orElseThrow(() -> new NotFoundException("Role not found"));
+
+        user.setRoles(Set.of(newRole));
+
+        appUserRepo.save(user);
+    }
+
+    @Transactional
     public ResponseEntity<OperationResponseDTO> changeLockedStatus(UserStatusRequestDTO statusRequest) {
-        Optional<AppUser> userOptional = appUserRepo.findByUsername(statusRequest.getUsername());
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+        AppUser user = appUserRepo.findByUsername(statusRequest.getUsername())
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
-        AppUser user = userOptional.get();
-
-        // Cannot lock/unlock administrator
-        if (user.getRoles().contains(roleRepo.findByName(RoleNames.ROLE_ADMINISTRATOR.toString()))) {
-            return ResponseEntity.badRequest().build();
+        if (isUserAnAdministrator(user)) {
+            throw new BadRequestException("Cannot change locked status for Administrator");
         }
 
         boolean newLockedStatus = statusRequest.getOperation().equals("LOCK");
@@ -134,7 +119,8 @@ public class UserService {
         }
 
         user.setLocked(newLockedStatus);
-        AppUser savedUser = appUserRepo.save(user);
-        return ResponseEntity.ok(OperationResponseDTO.ofLockStatus(savedUser));
+        appUserRepo.save(user);
+
+        return ResponseEntity.ok(OperationResponseDTO.ofLockStatus(user));
     }
 }

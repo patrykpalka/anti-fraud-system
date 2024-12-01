@@ -1,9 +1,16 @@
 package antifraud.service.utils;
 
+import antifraud.dto.request.UserRegistrationRequestDTO;
+import antifraud.dto.request.UserRoleRequestDTO;
 import antifraud.dto.transaction.TransactionRequestDTO;
 import antifraud.enums.RegionNames;
+import antifraud.enums.RoleNames;
+import antifraud.exception.BadRequestException;
+import antifraud.model.AppUser;
+import antifraud.model.Role;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class ValidationUtil {
     public static boolean isValidCardNumber(String cardNumber) {
@@ -52,9 +59,23 @@ public class ValidationUtil {
         return Arrays.stream(RegionNames.values()).anyMatch(r -> r.name().equals(region));
     }
 
-    public static boolean isValidTransactionInput(TransactionRequestDTO dto) {
-        return dto.getAmount() > 0 &&
-                isValidCardNumber(dto.getNumber()) &&
-                isValidRegion(dto.getRegion());
+    public static boolean isValidTransactionInput(TransactionRequestDTO transaction) {
+        return transaction.getAmount() > 0 &&
+                isValidCardNumber(transaction.getNumber()) &&
+                isValidRegion(transaction.getRegion());
+    }
+
+    public static boolean isValidRegistrationInput(UserRegistrationRequestDTO registration) {
+        return registration.getUsername() != null && !registration.getUsername().isBlank() &&
+                registration.getPassword() != null && !registration.getPassword().isBlank();
+    }
+
+    public static boolean isValidUserRoleChange(String role) {
+        List<String> validRoles = List.of(RoleNames.SUPPORT.toString(), RoleNames.MERCHANT.toString());
+        return validRoles.contains(role);
+    }
+
+    public static boolean isUserAnAdministrator(AppUser user) {
+        return user.getRoles().contains(new Role(RoleNames.ROLE_ADMINISTRATOR.toString()));
     }
 }
