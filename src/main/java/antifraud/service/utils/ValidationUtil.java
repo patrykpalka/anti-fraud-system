@@ -1,11 +1,9 @@
 package antifraud.service.utils;
 
 import antifraud.dto.request.UserRegistrationRequestDTO;
-import antifraud.dto.request.UserRoleRequestDTO;
 import antifraud.dto.transaction.TransactionRequestDTO;
 import antifraud.enums.RegionNames;
 import antifraud.enums.RoleNames;
-import antifraud.exception.BadRequestException;
 import antifraud.model.AppUser;
 import antifraud.model.Role;
 
@@ -47,7 +45,16 @@ public class ValidationUtil {
         return sum % 10 == 0;
     }
 
-    public static boolean isValidIp(String ip) {
+    public static boolean isValidField(String field, String entityType) {
+        if (entityType.equalsIgnoreCase("IP address")) {
+            return isValidIp(field);
+        } else if (entityType.equalsIgnoreCase("card number")) {
+            return isValidCardNumber(field);
+        }
+        return false;
+    }
+
+    private static boolean isValidIp(String ip) {
         String ipPattern = "^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\\." +
                 "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\\." +
                 "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\\." +

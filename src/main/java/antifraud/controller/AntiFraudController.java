@@ -24,14 +24,14 @@ public class AntiFraudController {
         return antiFraudService.addSuspiciousIp(suspiciousIpRequestDTO);
     }
 
-    @DeleteMapping("/api/antifraud/suspicious-ip/{ip}")
-    public ResponseEntity<AntiFraudDeletionResponseDTO> removeSuspiciousIp(@PathVariable String ip) {
-        return antiFraudService.removeSuspiciousIp(ip);
-    }
-
     @GetMapping("/api/antifraud/suspicious-ip")
     public ResponseEntity<List<SuspiciousIp>> getSuspiciousIps() {
         return antiFraudService.getSuspiciousIps();
+    }
+
+    @DeleteMapping("/api/antifraud/suspicious-ip/{ip}")
+    public ResponseEntity<AntiFraudDeletionResponseDTO<SuspiciousIp>> removeSuspiciousIp(@PathVariable String ip) {
+        return antiFraudService.removeSuspiciousIp(ip);
     }
 
     @PostMapping("/api/antifraud/stolencard")
@@ -39,13 +39,13 @@ public class AntiFraudController {
         return antiFraudService.addStolenCard(stolenCardRequestDTO);
     }
 
-    @DeleteMapping("/api/antifraud/stolencard/{number}")
-    public ResponseEntity<AntiFraudDeletionResponseDTO> removeStolenCard(@PathVariable("number") String number) {
-        return antiFraudService.removeStolenCard(number);
-    }
-
     @GetMapping("/api/antifraud/stolencard")
     public ResponseEntity<List<StolenCard>> getStolenCards() {
         return antiFraudService.getStolenCards();
+    }
+
+    @DeleteMapping("/api/antifraud/stolencard/{number}")
+    public ResponseEntity<AntiFraudDeletionResponseDTO<StolenCard>> removeStolenCard(@PathVariable("number") String number) {
+        return antiFraudService.removeStolenCard(number);
     }
 }

@@ -11,12 +11,14 @@ import antifraud.model.SuspiciousIp;
 import antifraud.repo.StolenCardRepo;
 import antifraud.repo.SuspiciousIpRepo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.internal.Function;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static antifraud.service.utils.ValidationUtil.*;
 
@@ -28,44 +30,25 @@ public class AntiFraudService {
     private final StolenCardRepo stolenCardRepo;
 
     @Transactional
-    public ResponseEntity<SuspiciousIp> addSuspiciousIp(SuspiciousIpRequestDTO suspiciousIpRequestDTO) {
-        String ip = suspiciousIpRequestDTO.getIp();
-
-        if (!isValidIp(ip)) {
-            throw new BadRequestException("Invalid IP address");
-        }
-
-        if (suspiciousIpRepo.findByIp(ip).isPresent()) {
-            throw new ConflictException("This IP address is already in use");
-        }
-
-        SuspiciousIp suspiciousIp = suspiciousIpRequestDTO.toSuspiciousIp();
-        suspiciousIpRepo.save(suspiciousIp);
-
-        return ResponseEntity.ok(suspiciousIp);
-    }
-
-    @Transactional
-    public ResponseEntity<StolenCard> addStolenCard(StolenCardRequestDTO stolenCardRequestDTO) {
-        String number = stolenCardRequestDTO.getNumber();
-
-        if (!isValidCardNumber(number)) {
-            throw new BadRequestException("Invalid card number");
-        }
-
-        if (stolenCardRepo.findByNumber(number).isPresent()) {
-            throw new ConflictException("This number is already in use");
-        }
-
-        StolenCard stolenCard = stolenCardRequestDTO.toStolenCard();
-        stolenCardRepo.save(stolenCard);
-
-        return ResponseEntity.ok(stolenCard);
+    public ResponseEntity<SuspiciousIp> addSuspiciousIp(SuspiciousIpRequestDTO requestDTO) {
+        return addEntity(requestDTO, SuspiciousIpRequestDTO::toSuspiciousIp,
+                suspiciousIpRepo::findByIp, suspiciousIpRepo::save, "IP address");
     }
 
     @Transactional(readOnly = true)
     public ResponseEntity<List<SuspiciousIp>> getSuspiciousIps() {
         return ResponseEntity.ok(suspiciousIpRepo.findAllByOrderByIdAsc());
+    }
+
+    @Transactional
+    public ResponseEntity<AntiFraudDeletionResponseDTO<SuspiciousIp>> removeSuspiciousIp(String ip) {
+        return removeEntity(ip, suspiciousIpRepo::findByIp, suspiciousIpRepo::delete, "IP address");
+    }
+
+    @Transactional
+    public ResponseEntity<StolenCard> addStolenCard(StolenCardRequestDTO requestDTO) {
+        return addEntity(requestDTO, StolenCardRequestDTO::toStolenCard,
+                stolenCardRepo::findByNumber, stolenCardRepo::save, "card number");
     }
 
     @Transactional(readOnly = true)
@@ -74,38 +57,52 @@ public class AntiFraudService {
     }
 
     @Transactional
-    public ResponseEntity<AntiFraudDeletionResponseDTO> removeSuspiciousIp(String requestIp) {
-        if (!isValidIp(requestIp)) {
-            throw new BadRequestException("Invalid IP address");
-        }
-
-        Optional<SuspiciousIp> suspiciousIpOptional = suspiciousIpRepo.findByIp(requestIp);
-
-        if (suspiciousIpOptional.isEmpty()) {
-            throw new NotFoundException("Suspicious ip not found");
-        }
-
-        SuspiciousIp suspiciousIp = suspiciousIpOptional.get();
-        suspiciousIpRepo.delete(suspiciousIp);
-
-        return ResponseEntity.ok(new AntiFraudDeletionResponseDTO(suspiciousIp));
+    public ResponseEntity<AntiFraudDeletionResponseDTO<StolenCard>> removeStolenCard(String number) {
+        return removeEntity(number, stolenCardRepo::findByNumber, stolenCardRepo::delete, "card number");
     }
 
-    @Transactional
-    public ResponseEntity<AntiFraudDeletionResponseDTO> removeStolenCard(String number) {
-        if (!isValidCardNumber(number)) {
-            throw new BadRequestException("Invalid card number");
+    private <T, R> ResponseEntity<T> addEntity(R requestDTO, Function<R, T> toEntity, Function<String,
+            Optional<T>> findByField, Consumer<T> saveEntity, String entityType) {
+        String field = getFieldFromDTO(requestDTO);
+
+        if (!isValidField(field, entityType)) {
+            throw new BadRequestException("Invalid " + entityType);
         }
 
-        Optional<StolenCard> stolenCardOptional = stolenCardRepo.findByNumber(number);
-
-        if (stolenCardOptional.isEmpty()) {
-            throw new NotFoundException("Stolen Card not found");
+        if (findByField.apply(field).isPresent()) {
+            throw new ConflictException("This " + entityType + " is already in use");
         }
 
-        StolenCard stolenCard = stolenCardOptional.get();
-        stolenCardRepo.delete(stolenCard);
+        T entity = toEntity.apply(requestDTO);
+        saveEntity.accept(entity);
 
-        return ResponseEntity.ok(new AntiFraudDeletionResponseDTO(stolenCard));
+        return ResponseEntity.ok(entity);
+    }
+
+    private String getFieldFromDTO(Object dto) {
+        if (dto instanceof SuspiciousIpRequestDTO) {
+            return ((SuspiciousIpRequestDTO) dto).getIp();
+        } else if (dto instanceof StolenCardRequestDTO) {
+            return ((StolenCardRequestDTO) dto).getNumber();
+        }
+        throw new IllegalArgumentException("Unsupported DTO type");
+    }
+
+    private <T> ResponseEntity<AntiFraudDeletionResponseDTO<T>> removeEntity(String field, Function<String,
+            Optional<T>> findByField, Consumer<T> deleteEntity, String entityType) {
+        if (!isValidField(field, entityType)) {
+            throw new BadRequestException("Invalid " + entityType);
+        }
+
+        Optional<T> entityOptional = findByField.apply(field);
+
+        if (entityOptional.isEmpty()) {
+            throw new NotFoundException(entityType + " not found");
+        }
+
+        T entity = entityOptional.get();
+        deleteEntity.accept(entity);
+
+        return ResponseEntity.ok(new AntiFraudDeletionResponseDTO<>(entity));
     }
 }
