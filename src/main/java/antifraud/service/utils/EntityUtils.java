@@ -31,8 +31,8 @@ public class EntityUtils {
      * @throws ConflictException   if an entity with the specified field already exists
      * @throws IllegalArgumentException if the DTO type is unsupported
      */
-    public static  <T, R> ResponseEntity<T> addEntity(R requestDTO, Function<R, T> toEntity, Function<String,
-            Optional<T>> findEntityByField, Consumer<T> saveEntity, String entityType) {
+    public static <T, R> ResponseEntity<T> addEntity(R requestDTO, Function<R, T> toEntity,
+            Function<String, Optional<T>> findEntityByField, Consumer<T> saveEntity, String entityType) {
         String field = getFieldFromDTO(requestDTO, dto -> {
             if (dto instanceof SuspiciousIpRequestDTO) return ((SuspiciousIpRequestDTO) dto).getIp();
             if (dto instanceof StolenCardRequestDTO) return ((StolenCardRequestDTO) dto).getNumber();
@@ -69,7 +69,7 @@ public class EntityUtils {
      * Removes an entity from the system after performing necessary validations.
      *
      * @param field             the field value used to find the entity to be removed
-     * @param findByField       a function to find an existing entity by the specified field
+     * @param findEntityByField       a function to find an existing entity by the specified field
      * @param deleteEntity      a consumer to delete the entity from the repository
      * @param entityType        the type of entity being removed (e.g., "IP address" or "card number")
      * @param <T>               the type of the removable entity
@@ -77,13 +77,13 @@ public class EntityUtils {
      * @throws BadRequestException if the field is invalid or missing
      * @throws NotFoundException   if the specified entity is not found
      */
-    public static  <T extends RemovableEntity> ResponseEntity<AntiFraudDeletionResponseDTO<T>> removeEntity(String field, Function<String,
-            Optional<T>> findByField, Consumer<T> deleteEntity, String entityType) {
+    public static <T extends RemovableEntity> ResponseEntity<AntiFraudDeletionResponseDTO<T>> removeEntity(
+            String field, Function<String, Optional<T>> findEntityByField, Consumer<T> deleteEntity, String entityType) {
         if (!isValidField(field, entityType)) {
             throw new BadRequestException("Invalid " + entityType + ": " + field);
         }
 
-        Optional<T> entityOptional = findByField.apply(field);
+        Optional<T> entityOptional = findEntityByField.apply(field);
 
         if (entityOptional.isEmpty()) {
             throw new NotFoundException("The specified " + entityType + " (" + field + ") was not found.");
