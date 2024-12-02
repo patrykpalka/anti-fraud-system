@@ -1,8 +1,8 @@
 package antifraud.dto.request;
 
 import antifraud.model.StolenCard;
+import antifraud.validation.annotation.ValidCardNumber;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class StolenCardRequestDTO {
     @NotBlank
-    @Pattern(regexp = "\\d{16}")
+    @ValidCardNumber
     String number;
 
     public StolenCard toStolenCard() {

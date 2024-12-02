@@ -1,8 +1,6 @@
 package antifraud.repo;
 
 import antifraud.model.Transaction;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;

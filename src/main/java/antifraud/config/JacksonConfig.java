@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 
 @Configuration
 public class JacksonConfig {
-
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();

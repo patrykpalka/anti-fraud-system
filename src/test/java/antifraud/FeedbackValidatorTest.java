@@ -1,6 +1,6 @@
 package antifraud;
 
-import antifraud.validation.FeedbackValidator;
+import antifraud.validation.annotation.FeedbackValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.junit.jupiter.api.Test;
 

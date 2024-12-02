@@ -13,8 +13,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static antifraud.service.utils.ValidationUtil.isValidField;
-
 public class EntityUtils {
     /**
      * Adds a new entity to the system after performing necessary validations.
@@ -38,10 +36,6 @@ public class EntityUtils {
             if (dto instanceof StolenCardRequestDTO) return ((StolenCardRequestDTO) dto).getNumber();
             throw new IllegalArgumentException("Unsupported DTO type");
         });
-
-        if (!isValidField(field, entityType)) {
-            throw new BadRequestException("Invalid " + entityType + ": " + field);
-        }
 
         if (findEntityByField.apply(field).isPresent()) {
             throw new ConflictException("This " + entityType + " is already in use");
@@ -79,10 +73,6 @@ public class EntityUtils {
      */
     public static <T extends RemovableEntity> ResponseEntity<AntiFraudDeletionResponseDTO<T>> removeEntity(
             String field, Function<String, Optional<T>> findEntityByField, Consumer<T> deleteEntity, String entityType) {
-        if (!isValidField(field, entityType)) {
-            throw new BadRequestException("Invalid " + entityType + ": " + field);
-        }
-
         T entity = findEntityByField.apply(field)
                 .orElseThrow(() -> new NotFoundException("The specified " + entityType + " (" + field + ") was not found."));
 

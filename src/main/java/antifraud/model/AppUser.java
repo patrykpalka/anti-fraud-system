@@ -11,7 +11,6 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 public class AppUser {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

@@ -6,6 +6,8 @@ import antifraud.dto.response.AntiFraudDeletionResponseDTO;
 import antifraud.model.StolenCard;
 import antifraud.model.SuspiciousIp;
 import antifraud.service.AntiFraudService;
+import antifraud.validation.annotation.ValidCardNumber;
+import antifraud.validation.annotation.ValidIp;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +32,7 @@ public class AntiFraudController {
     }
 
     @DeleteMapping("/api/antifraud/suspicious-ip/{ip}")
-    public ResponseEntity<AntiFraudDeletionResponseDTO<SuspiciousIp>> removeSuspiciousIp(@PathVariable String ip) {
+    public ResponseEntity<AntiFraudDeletionResponseDTO<SuspiciousIp>> removeSuspiciousIp(@ValidIp @PathVariable String ip) {
         return antiFraudService.removeSuspiciousIp(ip);
     }
 
@@ -45,7 +47,7 @@ public class AntiFraudController {
     }
 
     @DeleteMapping("/api/antifraud/stolencard/{number}")
-    public ResponseEntity<AntiFraudDeletionResponseDTO<StolenCard>> removeStolenCard(@PathVariable("number") String number) {
+    public ResponseEntity<AntiFraudDeletionResponseDTO<StolenCard>> removeStolenCard(@ValidCardNumber @PathVariable("number") String number) {
         return antiFraudService.removeStolenCard(number);
     }
 }

@@ -8,7 +8,6 @@ import org.springframework.security.config.annotation.web.configurers.AuthorizeH
 
 @Configuration
 public class AuthorizationRuleConfigurer {
-
     void configureAuthorizationRules(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
         configurePublicEndpoints(auth);
         configureAdminEndpoints(auth);

@@ -5,7 +5,6 @@ import lombok.Data;
 
 @Data
 public class AntiFraudDeletionResponseDTO<T extends RemovableEntity> {
-
     private String status;
 
     public AntiFraudDeletionResponseDTO(T entity) {

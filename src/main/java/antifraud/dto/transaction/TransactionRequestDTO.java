@@ -1,6 +1,9 @@
 package antifraud.dto.transaction;
 
 import antifraud.model.Transaction;
+import antifraud.validation.annotation.ValidCardNumber;
+import antifraud.validation.annotation.ValidIp;
+import antifraud.validation.annotation.ValidRegion;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -13,20 +16,19 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionRequestDTO {
+    @Size(min = 1)
     private long amount;
 
     @NotBlank
-    @Pattern(regexp = "^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\\." +
-            "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\\." +
-            "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\\." +
-            "(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])$")
+    @ValidIp
     private String ip;
 
     @NotBlank
-    @Pattern(regexp = "\\d{16}")
+    @ValidCardNumber
     private String number;
 
     @NotBlank
+    @ValidRegion
     private String region;
 
     @NotNull
