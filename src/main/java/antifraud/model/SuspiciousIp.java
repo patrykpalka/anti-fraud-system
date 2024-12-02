@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Data
 @NoArgsConstructor
-public class SuspiciousIp {
+public class SuspiciousIp implements RemovableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,5 +20,10 @@ public class SuspiciousIp {
 
     public SuspiciousIp(String ip) {
         this.ip = ip;
+    }
+
+    @Override
+    public String getStatusMessage() {
+        return "IP " + ip + " successfully removed!";
     }
 }

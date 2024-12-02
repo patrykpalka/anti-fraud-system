@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Data
 @NoArgsConstructor
-public class StolenCard {
+public class StolenCard implements RemovableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,5 +23,10 @@ public class StolenCard {
 
     public StolenCard(String number) {
         this.number = number;
+    }
+
+    @Override
+    public String getStatusMessage() {
+        return "Card " + number + " successfully removed!";
     }
 }
