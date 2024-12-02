@@ -83,13 +83,9 @@ public class EntityUtils {
             throw new BadRequestException("Invalid " + entityType + ": " + field);
         }
 
-        Optional<T> entityOptional = findEntityByField.apply(field);
+        T entity = findEntityByField.apply(field)
+                .orElseThrow(() -> new NotFoundException("The specified " + entityType + " (" + field + ") was not found."));
 
-        if (entityOptional.isEmpty()) {
-            throw new NotFoundException("The specified " + entityType + " (" + field + ") was not found.");
-        }
-
-        T entity = entityOptional.get();
         deleteEntity.accept(entity);
 
         return ResponseEntity.ok(new AntiFraudDeletionResponseDTO<>(entity));

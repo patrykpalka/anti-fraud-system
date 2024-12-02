@@ -10,7 +10,6 @@ import antifraud.model.Transaction;
 import antifraud.repo.StolenCardRepo;
 import antifraud.repo.SuspiciousIpRepo;
 import antifraud.repo.TransactionRepo;
-import antifraud.service.utils.ValidationUtil;
 import antifraud.validation.transaction.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static antifraud.constants.ConstantsUtil.updateTransactionLimit;
+import static antifraud.service.utils.ConstantsUtil.updateTransactionLimit;
 import static antifraud.service.utils.ValidationUtil.*;
 
 @Service
@@ -68,13 +67,8 @@ public class TransactionService {
 
     @Transactional
     public ResponseEntity<FeedbackResponseDTO> addFeedback(FeedbackRequestDTO feedbackDTO) {
-        Optional<Transaction> transactionOptional = transactionRepo.getById(feedbackDTO.getTransactionId());
-
-        if (transactionOptional.isEmpty()) {
-            throw new NotFoundException("Transaction not found");
-        }
-
-        Transaction transaction = transactionOptional.get();
+        Transaction transaction = transactionRepo.getById(feedbackDTO.getTransactionId())
+                .orElseThrow(() -> new NotFoundException("Transaction not found"));
 
         if (transaction.getFeedback() != null) {
             throw new ConflictException("Transaction already has feedback");
@@ -104,7 +98,7 @@ public class TransactionService {
 
     @Transactional(readOnly = true)
     public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(String number) {
-        if (!ValidationUtil.isValidCardNumber(number)) {
+        if (!isValidCardNumber(number)) {
             throw new BadRequestException("Invalid card number");
         }
 

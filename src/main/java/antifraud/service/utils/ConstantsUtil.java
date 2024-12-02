@@ -1,5 +1,6 @@
-package antifraud.constants;
+package antifraud.service.utils;
 
+import antifraud.constants.Constants;
 import antifraud.enums.TransactionType;
 import antifraud.model.Transaction;
 
