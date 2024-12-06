@@ -46,7 +46,7 @@ public class EntityUtils {
         // Create the new entity
         T entity = toEntity.apply(requestDTO);
 
-        // Save the new entity
+        // Save the new entity in the repository
         saveEntity.accept(entity);
 
         // Return the created entity

@@ -1,4 +1,4 @@
-package antifraud.dto.transaction;
+package antifraud.dto.request;
 
 import antifraud.model.Transaction;
 import antifraud.validation.annotation.ValidCardNumber;
@@ -6,15 +6,11 @@ import antifraud.validation.annotation.ValidIp;
 import antifraud.validation.annotation.ValidRegion;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class TransactionRequestDTO {
     @Size(min = 1)
     private long amount;

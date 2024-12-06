@@ -1,9 +1,13 @@
 package antifraud.dto.response;
 
 import antifraud.model.AppUser;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class OperationResponseDTO {
     private String status;
 

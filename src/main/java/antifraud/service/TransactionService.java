@@ -2,8 +2,8 @@ package antifraud.service;
 
 import antifraud.dto.request.FeedbackRequestDTO;
 import antifraud.dto.response.FeedbackResponseDTO;
-import antifraud.dto.transaction.TransactionRequestDTO;
-import antifraud.dto.transaction.TransactionResponseDTO;
+import antifraud.dto.request.TransactionRequestDTO;
+import antifraud.dto.response.TransactionResponseDTO;
 import antifraud.enums.TransactionType;
 import antifraud.exception.*;
 import antifraud.model.Transaction;

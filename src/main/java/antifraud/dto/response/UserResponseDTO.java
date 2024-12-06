@@ -1,17 +1,12 @@
 package antifraud.dto.response;
 
-import antifraud.dto.base.BaseUserWithNameDTO;
 import antifraud.model.AppUser;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-@SuperBuilder
-public class UserResponseDTO extends BaseUserWithNameDTO {
+public class UserResponseDTO {
+    private String username;
+    private String name;
     private long id;
     private String role;
 

@@ -2,8 +2,8 @@ package antifraud.controller;
 
 import antifraud.dto.request.FeedbackRequestDTO;
 import antifraud.dto.response.FeedbackResponseDTO;
-import antifraud.dto.transaction.TransactionRequestDTO;
-import antifraud.dto.transaction.TransactionResponseDTO;
+import antifraud.dto.request.TransactionRequestDTO;
+import antifraud.dto.response.TransactionResponseDTO;
 import antifraud.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

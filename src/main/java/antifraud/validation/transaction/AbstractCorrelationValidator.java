@@ -1,6 +1,6 @@
 package antifraud.validation.transaction;
 
-import antifraud.dto.transaction.TransactionRequestDTO;
+import antifraud.dto.request.TransactionRequestDTO;
 import antifraud.enums.TransactionType;
 import antifraud.model.Transaction;
 import antifraud.repo.TransactionRepo;

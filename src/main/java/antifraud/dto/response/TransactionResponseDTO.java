@@ -1,11 +1,9 @@
-package antifraud.dto.transaction;
+package antifraud.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class TransactionResponseDTO {
     private String result;

@@ -2,12 +2,10 @@ package antifraud.dto.response;
 
 import antifraud.model.Transaction;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
 public class FeedbackResponseDTO {
     private long transactionId;
     private long amount;

@@ -1,18 +1,19 @@
 package antifraud.dto.request;
 
+import antifraud.dto.base.BaseUserWithNameDTO;
 import antifraud.model.AppUser;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Data
-public class UserRegistrationRequestDTO {
-    @NotBlank (message = "Username cannot be empty")
-    private String username;
-
-    @NotBlank (message = "Name cannot be empty")
-    private String name;
-
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@SuperBuilder
+public class UserRegistrationRequestDTO extends BaseUserWithNameDTO {
     @NotBlank (message = "Password cannot be empty")
     private String password;
 

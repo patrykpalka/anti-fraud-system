@@ -34,11 +34,7 @@ public class UserService {
     private final AppUserService appUserService;
 
     @Transactional(readOnly = true)
-    public ResponseEntity<?> registerUser(UserRegistrationRequestDTO registration) {
-        if (!isValidRegistrationInput(registration)) {
-            throw new BadRequestException("Username and password cannot be empty");
-        }
-
+    public ResponseEntity<UserResponseDTO> registerUser(UserRegistrationRequestDTO registration) {
         if (appUserRepo.findByUsername(registration.getUsername()).isPresent()) {
             throw new ConflictException("Username already exists");
         }

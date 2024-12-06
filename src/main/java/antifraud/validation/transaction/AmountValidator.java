@@ -1,7 +1,7 @@
 package antifraud.validation.transaction;
 
 import antifraud.constants.Constants;
-import antifraud.dto.transaction.TransactionRequestDTO;
+import antifraud.dto.request.TransactionRequestDTO;
 import antifraud.enums.TransactionType;
 
 import java.util.List;
