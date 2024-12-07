@@ -31,7 +31,7 @@ public class TransactionService {
     private final SuspiciousIpRepo suspiciousIpRepo;
     private final StolenCardRepo stolenCardRepo;
 
-    @Transactional
+//    @Transactional
     public ResponseEntity<TransactionResponseDTO> addTransaction(TransactionRequestDTO transactionDTO) {
         List<String> reasonsForRejection = new ArrayList<>();
         String type = reviewTransaction(transactionDTO, reasonsForRejection);
@@ -62,7 +62,7 @@ public class TransactionService {
         return type.toString();
     }
 
-    @Transactional
+//    @Transactional
     public ResponseEntity<FeedbackResponseDTO> addFeedback(FeedbackRequestDTO feedbackDTO) {
         Transaction transaction = transactionRepo.findById(feedbackDTO.getTransactionId())
                 .orElseThrow(() -> new NotFoundException("Transaction not found"));
@@ -84,7 +84,7 @@ public class TransactionService {
         return ResponseEntity.ok(new FeedbackResponseDTO(transaction));
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public ResponseEntity<?> getHistory() {
         List<Transaction> transactions = transactionRepo.findAllByOrderByIdAsc();
 
@@ -93,7 +93,7 @@ public class TransactionService {
                 .collect(Collectors.toList()));
     }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(@Valid @ValidCardNumber String number) {
         List<Transaction> transactions = transactionRepo.findAllByNumberOrderByIdAsc(number);
 

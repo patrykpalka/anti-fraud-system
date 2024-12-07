@@ -26,7 +26,7 @@ public class SuspiciousIp implements RemovableEntity {
     }
 
     @Override
-    public String getStatusMessage() {
+    public String deletionMessage() {
         return "IP " + ip + " successfully removed!";
     }
 }

@@ -5,6 +5,7 @@ import antifraud.validation.annotation.ValidCardNumber;
 import antifraud.validation.annotation.ValidIp;
 import antifraud.validation.annotation.ValidRegion;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class TransactionRequestDTO {
-    @Size(min = 1)
+    @Min(value = 1)
     private long amount;
 
     @NotBlank

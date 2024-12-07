@@ -21,12 +21,12 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/api/auth/user")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationRequestDTO registration) {
+    public ResponseEntity<UserResponseDTO> registerUser(@Valid @RequestBody UserRegistrationRequestDTO registration) {
         return userService.registerUser(registration);
     }
 
     @GetMapping("/api/auth/list")
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+    public ResponseEntity<?> getAllUsers() {
         return userService.getAllUsers();
     }
 

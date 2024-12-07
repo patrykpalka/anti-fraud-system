@@ -26,7 +26,7 @@ public class StolenCard implements RemovableEntity {
     }
 
     @Override
-    public String deletionMessage() {
+    public String getDeletionMessage() {
         return "Card " + number + " successfully removed!";
     }
 }

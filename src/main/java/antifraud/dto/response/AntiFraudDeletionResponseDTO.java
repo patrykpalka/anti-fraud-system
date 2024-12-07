@@ -8,6 +8,6 @@ public class AntiFraudDeletionResponseDTO<T extends RemovableEntity> {
     private String status;
 
     public AntiFraudDeletionResponseDTO(T entity) {
-        this.status = entity.getStatusMessage();
+        this.status = entity.deletionMessage();
     }
 }
