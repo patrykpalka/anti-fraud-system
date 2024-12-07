@@ -3,10 +3,12 @@ package antifraud;
 import antifraud.validation.annotation.FeedbackValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
+@SpringBootTest
 public class FeedbackValidatorTest {
 
     private final FeedbackValidator feedbackValidator = new FeedbackValidator();

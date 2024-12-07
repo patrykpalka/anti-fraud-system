@@ -56,6 +56,12 @@ public class CardNumberValidatorTest {
     }
 
     @Test
+    void testNullOrEmptyInput() {
+        assertFalse(validator.isValid(null, mockContext));
+        assertFalse(validator.isValid("", mockContext));
+    }
+
+    @Test
     void testEdgeCaseWithOneDigit() {
         assertFalse(validator.isValid("1", mockContext));
     }
