@@ -2,6 +2,7 @@ package antifraud;
 
 import antifraud.dto.request.TransactionRequestDTO;
 import antifraud.enums.TransactionType;
+import antifraud.model.Transaction;
 import antifraud.validation.transaction.AmountValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +33,21 @@ public class TransactionRequestTest {
     @BeforeEach
     void setUp() {
         validator = new AmountValidator();
+    }
+
+    @Test
+    void testCoversionToTransaction() {
+        TransactionRequestDTO dto = new TransactionRequestDTO();
+        dto.setAmount(100);
+        dto.setIp("123.45.67.89");
+        dto.setNumber("1234567890123456");
+        dto.setRegion("EAP");
+        dto.setDate(LocalDateTime.parse("2023-12-08T10:15:30"));
+        Transaction dtoTransaction = dto.getTransaction();
+        Transaction transaction = new Transaction(100, "123.45.67.89", "1234567890123456",
+                "EAP", LocalDateTime.parse("2023-12-08T10:15:30"));
+
+        assertEquals(dtoTransaction, transaction);
     }
 
     @Test
