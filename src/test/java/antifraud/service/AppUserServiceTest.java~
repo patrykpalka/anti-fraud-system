@@ -1,0 +1,141 @@
+package antifraud.service;
+
+import antifraud.dto.request.UserRegistrationRequestDTO;
+import antifraud.enums.RoleNames;
+import antifraud.model.AppUser;
+import antifraud.model.Role;
+import antifraud.repo.AppUserRepo;
+import antifraud.repo.RoleRepo;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class AppUserServiceTest {
+
+    @InjectMocks
+    private AppUserService appUserService;
+
+    @Mock
+    private AppUserRepo appUserRepo;
+
+    @Mock
+    private RoleRepo roleRepo;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+
+    private UserRegistrationRequestDTO registrationDTO;
+    private AppUser appUser;
+    private Role adminRole;
+    private Role merchantRole;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        // Create a mock registration DTO
+        registrationDTO = new UserRegistrationRequestDTO();
+        registrationDTO.setUsername("testuser");
+        registrationDTO.setName("Test User");
+        registrationDTO.setPassword("password");
+
+        // Create a mock AppUser
+        appUser = new AppUser();
+        appUser.setUsername("testuser");
+        appUser.setName("Test User");
+        appUser.setPassword("encodedPassword");
+
+        // Create mock roles that the repository should return
+        adminRole = new Role("ROLE_ADMINISTRATOR");
+        merchantRole = new Role("ROLE_MERCHANT");
+
+        // Mock repository behavior
+        when(roleRepo.findByName("ROLE_ADMINISTRATOR")).thenReturn(Optional.of(adminRole));
+        when(roleRepo.findByName("ROLE_MERCHANT")).thenReturn(Optional.of(merchantRole));
+    }
+
+    @Test
+    void testRegisterFirstUserAsAdmin() {
+        // Arrange
+        when(appUserRepo.count()).thenReturn(0L); // Indicates this is the first user
+        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
+        when(appUserRepo.save(any(AppUser.class))).thenReturn(appUser);
+
+        // Act
+        AppUser registeredUser = appUserService.register(registrationDTO);
+
+        // Assert
+        assertNotNull(registeredUser);
+        assertTrue(registeredUser.getRoles().contains(adminRole));
+        assertFalse(registeredUser.isLocked()); // The first user should not be locked
+    }
+
+    @Test
+    void testRegisterUserSuccessfully() {
+        // Arrange
+        when(appUserRepo.count()).thenReturn(1L); // Indicates this is not the first user
+        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
+        when(appUserRepo.save(any(AppUser.class))).thenReturn(appUser);
+
+        // Act
+        AppUser registeredUser = appUserService.register(registrationDTO);
+
+        // Assert
+        assertNotNull(registeredUser);
+        assertTrue(registeredUser.getRoles().contains(merchantRole));
+        assertTrue(registeredUser.isLocked()); // The second user should be locked
+    }
+
+    @Test
+    void testRoleNotFoundThrowsException() {
+        // Arrange
+        when(roleRepo.findByName(RoleNames.ROLE_MERCHANT.toString())).thenReturn(Optional.empty());
+        when(appUserRepo.count()).thenReturn(1L); // Indicates this is not the first user
+        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
+
+        // Act & Assert
+        Exception exception = assertThrows(IllegalStateException.class, () -> appUserService.register(registrationDTO));
+
+        assertEquals("Role not found", exception.getMessage());
+
+        verify(roleRepo, times(1)).findByName(RoleNames.ROLE_MERCHANT.toString());
+        verify(appUserRepo, times(0)).save(any(AppUser.class));
+    }
+
+    @Test
+    void testRegisterRoleAssignmentForFirstUser() {
+        // Arrange
+        when(appUserRepo.count()).thenReturn(0L); // Indicates this is the first user
+        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
+        when(appUserRepo.save(any(AppUser.class))).thenReturn(appUser);
+
+        // Act
+        AppUser registeredUser = appUserService.register(registrationDTO);
+
+        // Assert
+        assertTrue(registeredUser.getRoles().contains(adminRole));
+    }
+
+    @Test
+    void testRegisterRoleAssignmentForSubsequentUsers() {
+        // Arrange
+        when(appUserRepo.count()).thenReturn(1L); // Indicates this is not the first user
+        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
+        when(appUserRepo.save(any(AppUser.class))).thenReturn(appUser);
+
+        // Act
+        AppUser registeredUser = appUserService.register(registrationDTO);
+
+        // Assert
+        assertTrue(registeredUser.getRoles().contains(merchantRole));
+    }
+}

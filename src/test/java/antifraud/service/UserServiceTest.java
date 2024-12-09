@@ -1,4 +1,4 @@
-package antifraud;
+package antifraud.service;
 
 import antifraud.dto.request.UserRegistrationRequestDTO;
 import antifraud.dto.request.UserRoleRequestDTO;
@@ -13,8 +13,6 @@ import antifraud.model.AppUser;
 import antifraud.model.Role;
 import antifraud.repo.AppUserRepo;
 import antifraud.repo.RoleRepo;
-import antifraud.service.AppUserService;
-import antifraud.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

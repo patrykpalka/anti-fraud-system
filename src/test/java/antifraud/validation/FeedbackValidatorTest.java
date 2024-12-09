@@ -1,4 +1,4 @@
-package antifraud;
+package antifraud.validation;
 
 import antifraud.validation.annotation.FeedbackValidator;
 import jakarta.validation.ConstraintValidatorContext;

@@ -1,4 +1,4 @@
-package antifraud;
+package antifraud.validation;
 
 import antifraud.enums.RegionNames;
 import antifraud.validation.annotation.RegionValidator;
