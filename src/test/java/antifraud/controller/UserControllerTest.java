@@ -10,10 +10,12 @@ import antifraud.model.AppUser;
 import antifraud.model.Role;
 import antifraud.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -23,6 +25,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class UserControllerTest {
 
     @Mock
@@ -31,125 +34,129 @@ class UserControllerTest {
     @InjectMocks
     private UserController userController;
 
+    private UserRegistrationRequestDTO validRegistrationRequest;
+    private AppUser validUser;
+    private UserRoleRequestDTO validRoleRequest;
+    private UserStatusRequestDTO validStatusRequest;
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        validRegistrationRequest = createValidUserRegistrationRequest();
+        validUser = createValidUser();
+        validRoleRequest = createValidUserRoleRequest();
+        validStatusRequest = createValidUserStatusRequest();
     }
 
     @Test
-    void testRegisterUser_Success() {
-        UserRegistrationRequestDTO registrationRequest = new UserRegistrationRequestDTO();
-        registrationRequest.setUsername("testUser");
-        registrationRequest.setName("Test User");
-        registrationRequest.setPassword("password");
+    @DisplayName("Should successfully register a user")
+    void shouldRegisterUserSuccessfully() {
+        // Arrange
+        UserResponseDTO expectedResponse = new UserResponseDTO(validUser);
+        when(userService.registerUser(validRegistrationRequest))
+                .thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(expectedResponse));
 
-        // Mock user and roles
-        AppUser user = new AppUser("Test User", "testUser", "encodedPassword");
-        Role role = new Role();
-        role.setName("ROLE_USER"); // Set a role name
-        user.setRoles(Set.of(role)); // Assign role to user
+        // Act
+        ResponseEntity<UserResponseDTO> response = userController.registerUser(validRegistrationRequest);
 
-        // Create the response DTO
-        UserResponseDTO userResponse = new UserResponseDTO(user);
-
-        when(userService.registerUser(registrationRequest)).thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(userResponse));
-
-        // Perform the test
-        ResponseEntity<UserResponseDTO> response = userController.registerUser(registrationRequest);
-
-        // Assertions
+        // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(userResponse, response.getBody());
-        verify(userService, times(1)).registerUser(registrationRequest);
+        assertEquals(expectedResponse, response.getBody());
+        verify(userService).registerUser(validRegistrationRequest);
     }
 
     @Test
-    void testGetAllUsers_Success() {
-        // Mock user1 with roles
-        AppUser user1 = new AppUser("user1", "User One", "encodedPassword");
-        Role role1 = new Role();
-        role1.setName("ROLE_USER");
-        user1.setRoles(Set.of(role1)); // Assign role to user1
+    @DisplayName("Should successfully get all users")
+    void shouldGetAllUsersSuccessfully() {
+        // Arrange
+        List<UserResponseDTO> expectedUsers = List.of(new UserResponseDTO(validUser));
+        when(userService.getAllUsers()).thenReturn(ResponseEntity.ok(expectedUsers));
 
-        // Mock user2 with roles
-        AppUser user2 = new AppUser("user2", "User Two", "encodedPassword");
-        Role role2 = new Role();
-        role2.setName("ROLE_USER");
-        user2.setRoles(Set.of(role2)); // Assign role to user2
-
-        // Create response DTOs
-        UserResponseDTO userResponse1 = new UserResponseDTO(user1);
-        UserResponseDTO userResponse2 = new UserResponseDTO(user2);
-
-        List<UserResponseDTO> users = List.of(userResponse1, userResponse2);
-
-        when(userService.getAllUsers()).thenReturn(ResponseEntity.ok(users));
-
-        // Perform the test
+        // Act
         ResponseEntity<List<UserResponseDTO>> response = userController.getAllUsers();
 
-        // Assertions
+        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(users, response.getBody());
-        verify(userService, times(1)).getAllUsers();
+        assertEquals(expectedUsers, response.getBody());
+        verify(userService).getAllUsers();
     }
 
     @Test
-    void testDeleteUser_Success() {
+    @DisplayName("Should successfully delete a user")
+    void shouldDeleteUserSuccessfully() {
+        // Arrange
         String username = "testUser";
-        UserDeletionResponseDTO deletionResponse = UserDeletionResponseDTO.ofDeletion(username);
+        UserDeletionResponseDTO expectedResponse = UserDeletionResponseDTO.ofDeletion(username);
+        when(userService.deleteUser(username)).thenReturn(ResponseEntity.ok(expectedResponse));
 
-        when(userService.deleteUser(username)).thenReturn(ResponseEntity.ok(deletionResponse));
-
+        // Act
         ResponseEntity<UserDeletionResponseDTO> response = userController.deleteUser(username);
 
+        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(deletionResponse, response.getBody());
-        verify(userService, times(1)).deleteUser(username);
+        assertEquals(expectedResponse, response.getBody());
+        verify(userService).deleteUser(username);
     }
 
     @Test
-    void testChangeRole_Success() {
-        // Mock role request
-        UserRoleRequestDTO roleRequest = new UserRoleRequestDTO();
-        roleRequest.setUsername("testUser");
-        roleRequest.setRole("ADMINISTRATOR");
+    @DisplayName("Should successfully change user role")
+    void shouldChangeUserRoleSuccessfully() {
+        // Arrange
+        UserResponseDTO expectedResponse = new UserResponseDTO(validUser);
+        when(userService.changeRole(validRoleRequest)).thenReturn(ResponseEntity.ok(expectedResponse));
 
-        // Mock AppUser with role
-        AppUser user = new AppUser("testUser", "User One", "encodedPassword");
+        // Act
+        ResponseEntity<UserResponseDTO> response = userController.changeRole(validRoleRequest);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+        verify(userService).changeRole(validRoleRequest);
+    }
+
+    @Test
+    @DisplayName("Should successfully change user locked status")
+    void shouldChangeUserLockedStatusSuccessfully() {
+        // Arrange
+        OperationResponseDTO expectedResponse = OperationResponseDTO.ofLockStatus(validUser);
+        when(userService.changeLockedStatus(validStatusRequest)).thenReturn(ResponseEntity.ok(expectedResponse));
+
+        // Act
+        ResponseEntity<OperationResponseDTO> response = userController.changeLockedStatus(validStatusRequest);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+        verify(userService).changeLockedStatus(validStatusRequest);
+    }
+
+    // Helper methods for creating test data
+    private UserRegistrationRequestDTO createValidUserRegistrationRequest() {
+        UserRegistrationRequestDTO request = new UserRegistrationRequestDTO();
+        request.setUsername("testUser");
+        request.setName("Test User");
+        request.setPassword("password");
+        return request;
+    }
+
+    private AppUser createValidUser() {
+        AppUser user = new AppUser("Test User", "testUser", "encodedPassword");
         Role role = new Role();
-        role.setName("ROLE_ADMINISTRATOR");
-        user.setRoles(Set.of(role)); // Assign the ADMINISTRATOR role
-
-        // Construct the UserResponseDTO
-        UserResponseDTO updatedUser = new UserResponseDTO(user);
-
-        // Mock service call
-        when(userService.changeRole(roleRequest)).thenReturn(ResponseEntity.ok(updatedUser));
-
-        // Perform the test
-        ResponseEntity<UserResponseDTO> response = userController.changeRole(roleRequest);
-
-        // Assertions
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updatedUser, response.getBody());
-        verify(userService, times(1)).changeRole(roleRequest);
+        role.setName("ROLE_USER");
+        user.setRoles(Set.of(role));
+        return user;
     }
 
-    @Test
-    void testChangeLockedStatus_Success() {
-        UserStatusRequestDTO statusRequest = new UserStatusRequestDTO();
-        statusRequest.setUsername("testUser");
-        statusRequest.setOperation("LOCK");
+    private UserRoleRequestDTO createValidUserRoleRequest() {
+        UserRoleRequestDTO request = new UserRoleRequestDTO();
+        request.setUsername("testUser");
+        request.setRole("ADMINISTRATOR");
+        return request;
+    }
 
-        OperationResponseDTO operationResponse = OperationResponseDTO.ofLockStatus(new AppUser("user", "User One", "USER"));
-
-        when(userService.changeLockedStatus(statusRequest)).thenReturn(ResponseEntity.ok(operationResponse));
-
-        ResponseEntity<OperationResponseDTO> response = userController.changeLockedStatus(statusRequest);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(operationResponse, response.getBody());
-        verify(userService, times(1)).changeLockedStatus(statusRequest);
+    private UserStatusRequestDTO createValidUserStatusRequest() {
+        UserStatusRequestDTO request = new UserStatusRequestDTO();
+        request.setUsername("testUser");
+        request.setOperation("LOCK");
+        return request;
     }
 }

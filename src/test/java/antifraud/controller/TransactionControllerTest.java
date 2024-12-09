@@ -5,19 +5,17 @@ import antifraud.dto.request.TransactionRequestDTO;
 import antifraud.dto.response.FeedbackResponseDTO;
 import antifraud.dto.response.TransactionResponseDTO;
 import antifraud.model.Transaction;
-import antifraud.repo.TransactionRepo;
 import antifraud.service.TransactionService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,35 +28,111 @@ class TransactionControllerTest {
     @Mock
     private TransactionService transactionService;
 
-    @Mock
-    private TransactionRepo transactionRepo;
-
     @InjectMocks
     private TransactionController transactionController;
 
+    private TransactionRequestDTO validTransactionRequest;
+    private Transaction validTransaction;
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        transactionController = new TransactionController(transactionService);
+        // Common setup for all tests
+        validTransactionRequest = createValidTransactionRequest();
+        validTransaction = createValidTransaction();
     }
 
     @Test
-    void testAddTransaction_Success() {
-        TransactionRequestDTO requestDTO = createMockTransactionRequestDTO();
-        TransactionResponseDTO responseDTO = new TransactionResponseDTO("ALLOWED", "none");
+    @DisplayName("Should successfully add transaction and return ALLOWED response")
+    void shouldAddTransactionSuccessfully() {
+        // Arrange
+        TransactionResponseDTO expectedResponse = new TransactionResponseDTO("ALLOWED", "none");
+        when(transactionService.addTransaction(validTransactionRequest))
+                .thenReturn(ResponseEntity.ok(expectedResponse));
 
-        when(transactionService.addTransaction(requestDTO)).thenReturn(ResponseEntity.ok(responseDTO));
+        // Act
+        ResponseEntity<TransactionResponseDTO> response =
+                transactionController.addTransaction(validTransactionRequest);
 
-        ResponseEntity<TransactionResponseDTO> response = transactionController.addTransaction(requestDTO);
-
+        // Assert
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals(responseDTO, response.getBody());
-        verify(transactionService, times(1)).addTransaction(requestDTO);
+        assertEquals(expectedResponse, response.getBody());
+        verify(transactionService).addTransaction(validTransactionRequest);
     }
 
     @Test
-    void testAddFeedback_Success() {
-        // Create a mock transaction
+    @DisplayName("Should successfully add feedback to a transaction")
+    void shouldAddFeedbackSuccessfully() {
+        // Arrange
+        FeedbackRequestDTO feedbackRequest = createValidFeedbackRequest();
+        FeedbackResponseDTO expectedResponse = new FeedbackResponseDTO(validTransaction);
+
+        when(transactionService.addFeedback(feedbackRequest))
+                .thenReturn(ResponseEntity.ok(expectedResponse));
+
+        // Act
+        ResponseEntity<FeedbackResponseDTO> response =
+                transactionController.addFeedback(feedbackRequest);
+
+        // Assert
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(expectedResponse, response.getBody());
+        verify(transactionService).addFeedback(feedbackRequest);
+    }
+
+    @Test
+    @DisplayName("Should retrieve transaction history successfully")
+    void shouldRetrieveTransactionHistory() {
+        // Arrange
+        List<Transaction> transactions = createMockTransactions();
+        List<FeedbackResponseDTO> expectedHistory = transactions.stream()
+                .map(FeedbackResponseDTO::new)
+                .collect(Collectors.toList());
+
+        when(transactionService.getHistory())
+                .thenReturn(ResponseEntity.ok(expectedHistory));
+
+        // Act
+        ResponseEntity<?> response = transactionController.getHistory();
+
+        // Assert
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(expectedHistory, response.getBody());
+        verify(transactionService).getHistory();
+    }
+
+    @Test
+    @DisplayName("Should retrieve transaction history for specific card number")
+    void shouldRetrieveTransactionHistoryByCardNumber() {
+        // Arrange
+        String cardNumber = "4000000000000002";
+        FeedbackResponseDTO feedbackResponse = new FeedbackResponseDTO(validTransaction);
+        List<FeedbackResponseDTO> expectedHistory = List.of(feedbackResponse);
+
+        when(transactionService.getHistoryByNumber(cardNumber))
+                .thenReturn(ResponseEntity.ok(expectedHistory));
+
+        // Act
+        ResponseEntity<List<FeedbackResponseDTO>> response =
+                transactionController.getHistoryByNumber(cardNumber);
+
+        // Assert
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(expectedHistory, response.getBody());
+        verify(transactionService).getHistoryByNumber(cardNumber);
+    }
+
+    // Helper methods for creating test data
+    private TransactionRequestDTO createValidTransactionRequest() {
+        TransactionRequestDTO request = new TransactionRequestDTO();
+        request.setAmount(100);
+        request.setIp("192.168.1.1");
+        request.setNumber("4000000000000002");
+        request.setRegion("EAU");
+        request.setDate(LocalDateTime.now());
+        return request;
+    }
+
+    private Transaction createValidTransaction() {
         Transaction transaction = new Transaction();
         transaction.setId(1L);
         transaction.setAmount(100);
@@ -67,37 +141,18 @@ class TransactionControllerTest {
         transaction.setRegion("EAU");
         transaction.setDate(LocalDateTime.now());
         transaction.setResult("ALLOWED");
-
-        // Create a mock request DTO
-        FeedbackRequestDTO requestDTO = createMockFeedbackRequestDTO();
-
-        // Create the expected response DTO
-        FeedbackResponseDTO responseDTO = new FeedbackResponseDTO(transaction);
-
-        // Mock the service to return the response DTO
-        when(transactionService.addFeedback(requestDTO)).thenReturn(ResponseEntity.ok(responseDTO));
-
-        // Call the controller method
-        ResponseEntity<FeedbackResponseDTO> response = transactionController.addFeedback(requestDTO);
-
-        // Assertions
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(responseDTO, response.getBody());
-        verify(transactionService, times(1)).addFeedback(requestDTO);
+        return transaction;
     }
 
-    @Test
-    void testGetHistory_WithData() {
-        // Create mock transactions
-        Transaction transaction1 = new Transaction();
-        transaction1.setId(1L);
-        transaction1.setAmount(100);
-        transaction1.setIp("192.168.1.1");
-        transaction1.setNumber("4000000000000002");
-        transaction1.setRegion("EAU");
-        transaction1.setDate(LocalDateTime.now());
-        transaction1.setResult("ALLOWED");
+    private FeedbackRequestDTO createValidFeedbackRequest() {
+        FeedbackRequestDTO request = new FeedbackRequestDTO();
+        request.setTransactionId(1L);
+        request.setFeedback("ALLOWED");
+        return request;
+    }
 
+    private List<Transaction> createMockTransactions() {
+        Transaction transaction1 = createValidTransaction();
         Transaction transaction2 = new Transaction();
         transaction2.setId(2L);
         transaction2.setAmount(200);
@@ -107,68 +162,6 @@ class TransactionControllerTest {
         transaction2.setDate(LocalDateTime.now());
         transaction2.setResult("BLOCKED");
 
-        List<Transaction> transactions = List.of(transaction1, transaction2);
-
-        // Mock the transactionRepo to return the mock transactions
-        when(transactionService.getHistory()).thenReturn(ResponseEntity.ok(
-                transactions.stream()
-                        .map(FeedbackResponseDTO::new)
-                        .collect(Collectors.toList())
-        ));
-
-        // Call the controller method
-        ResponseEntity<?> response = transactionController.getHistory();
-
-        // Assertions
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(transactions.stream().map(FeedbackResponseDTO::new).collect(Collectors.toList()), response.getBody());
-        verify(transactionService, times(1)).getHistory();
-    }
-
-    @Test
-    void testGetHistoryByNumber_Success() {
-        String cardNumber = "4000000000000002";
-
-        // Create a mock transaction
-        Transaction transaction = new Transaction();
-        transaction.setId(1L);
-        transaction.setAmount(100);
-        transaction.setIp("192.168.1.1");
-        transaction.setNumber(cardNumber);
-        transaction.setRegion("EAU");
-        transaction.setDate(LocalDateTime.now());
-        transaction.setResult("ALLOWED");
-
-        // Use the transaction to create a valid FeedbackResponseDTO
-        FeedbackResponseDTO feedbackResponseDTO = new FeedbackResponseDTO(transaction);
-        List<FeedbackResponseDTO> history = Collections.singletonList(feedbackResponseDTO);
-
-        // Mock the service response
-        when(transactionService.getHistoryByNumber(cardNumber)).thenReturn(ResponseEntity.ok(history));
-
-        // Call the controller method
-        ResponseEntity<List<FeedbackResponseDTO>> response = transactionController.getHistoryByNumber(cardNumber);
-
-        // Assertions
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(history, response.getBody());
-        verify(transactionService, times(1)).getHistoryByNumber(cardNumber);
-    }
-
-    private TransactionRequestDTO createMockTransactionRequestDTO() {
-        TransactionRequestDTO dto = new TransactionRequestDTO();
-        dto.setAmount(100);
-        dto.setIp("192.168.1.1");
-        dto.setNumber("4000000000000002");
-        dto.setRegion("EAU");
-        dto.setDate(LocalDateTime.now());
-        return dto;
-    }
-
-    private FeedbackRequestDTO createMockFeedbackRequestDTO() {
-        FeedbackRequestDTO dto = new FeedbackRequestDTO();
-        dto.setTransactionId(1L);
-        dto.setFeedback("ALLOWED");
-        return dto;
+        return List.of(transaction1, transaction2);
     }
 }
