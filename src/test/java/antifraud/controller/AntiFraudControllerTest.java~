@@ -1,0 +1,4 @@
+package antifraud.controller;
+
+public class AntiFraudControllerTest {
+}
