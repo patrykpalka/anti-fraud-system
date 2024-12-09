@@ -85,7 +85,7 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getHistory() {
+    public ResponseEntity<List<FeedbackResponseDTO>> getHistory() {
         List<Transaction> transactions = transactionRepo.findAllByOrderByIdAsc();
 
         return ResponseEntity.ok(transactions.isEmpty() ? Collections.emptyList() : transactions.stream()

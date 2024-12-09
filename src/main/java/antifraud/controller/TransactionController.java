@@ -29,7 +29,7 @@ public class TransactionController {
     }
 
     @GetMapping("/api/antifraud/history")
-    public ResponseEntity<?> getHistory() {
+    public ResponseEntity<List<FeedbackResponseDTO>> getHistory() {
         return transactionService.getHistory();
     }
 
