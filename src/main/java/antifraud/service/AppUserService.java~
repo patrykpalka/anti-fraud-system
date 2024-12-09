@@ -2,7 +2,6 @@ package antifraud.service;
 
 import antifraud.dto.request.UserRegistrationRequestDTO;
 import antifraud.enums.RoleNames;
-import antifraud.exception.NotFoundException;
 import antifraud.model.AppUser;
 import antifraud.model.Role;
 import antifraud.repo.AppUserRepo;
@@ -40,6 +39,6 @@ public class AppUserService {
 
     private Role findRole(RoleNames roleName) {
         return roleRepo.findByName(roleName.toString())
-                .orElseThrow(() -> new NotFoundException("Role not found"));
+                .orElseThrow(() -> new IllegalStateException("Role not found"));
     }
 }

@@ -1,13 +1,13 @@
 package antifraud.service;
 
-import antifraud.dto.request.StolenCardRequestDTO;
 import antifraud.dto.request.SuspiciousIpRequestDTO;
 import antifraud.dto.response.AntiFraudDeletionResponseDTO;
 import antifraud.exception.ConflictException;
 import antifraud.exception.NotFoundException;
-import antifraud.model.StolenCard;
 import antifraud.model.SuspiciousIp;
 import antifraud.service.utils.EntityUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,59 +24,66 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class EntityUtilsTest {
 
+    private Function<SuspiciousIpRequestDTO, SuspiciousIp> toSuspiciousIpEntity;
+    private Function<String, Optional<SuspiciousIp>> findSuspiciousIpByField;
+    private Consumer<SuspiciousIp> saveSuspiciousIp;
+
+    @BeforeEach
+    void setUp() {
+        toSuspiciousIpEntity = dto -> new SuspiciousIp(dto.getIp());
+        findSuspiciousIpByField = ip -> Optional.empty();
+        saveSuspiciousIp = ip -> {};
+    }
+
     @Test
-    void addEntity_successfulAddIP() {
+    @DisplayName("Should successfully add a new IP address when not already present")
+    void shouldSuccessfullyAddIPWhenNotPresent() {
         // Arrange
         SuspiciousIpRequestDTO requestDTO = new SuspiciousIpRequestDTO();
         requestDTO.setIp("192.168.1.1");
 
-        Function<SuspiciousIpRequestDTO, SuspiciousIp> toEntity = dto -> new SuspiciousIp(dto.getIp());
-        Function<String, Optional<SuspiciousIp>> findEntityByField = ip -> Optional.empty();
-        Consumer<SuspiciousIp> saveEntity = ip -> {};
-
         // Act
         ResponseEntity<SuspiciousIp> response = EntityUtils.addEntity(
                 requestDTO,
-                toEntity,
-                findEntityByField,
-                saveEntity,
+                toSuspiciousIpEntity,
+                findSuspiciousIpByField,
+                saveSuspiciousIp,
                 "IP address"
         );
 
         // Assert
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertEquals("192.168.1.1", response.getBody().getIp());
+        assertNotNull(response, "The response should not be null.");
+        assertEquals(200, response.getStatusCode().value(), "The response status code should be 200 OK.");
+        assertNotNull(response.getBody(), "The response body should not be null.");
+        assertEquals("192.168.1.1", response.getBody().getIp(), "The IP in the response should match the input.");
     }
 
     @Test
-    void addEntity_conflictWhenEntityAlreadyExists() {
+    @DisplayName("Should throw ConflictException when the IP address already exists")
+    void shouldThrowConflictExceptionWhenIPAlreadyExists() {
         // Arrange
-        StolenCardRequestDTO requestDTO = new StolenCardRequestDTO();
-        requestDTO.setNumber("1234567890123456");
+        SuspiciousIpRequestDTO requestDTO = new SuspiciousIpRequestDTO();
+        requestDTO.setIp("192.168.1.1");
 
-        Function<StolenCardRequestDTO, StolenCard> toEntity = dto -> new StolenCard(dto.getNumber());
-        Function<String, Optional<StolenCard>> findEntityByField =
-                number -> Optional.of(new StolenCard(number));
-        Consumer<StolenCard> saveEntity = card -> {};
+        findSuspiciousIpByField = ip -> Optional.of(new SuspiciousIp(ip));
 
         // Act & Assert
         ConflictException exception = assertThrows(ConflictException.class, () ->
                 EntityUtils.addEntity(
                         requestDTO,
-                        toEntity,
-                        findEntityByField,
-                        saveEntity,
-                        "card number"
+                        toSuspiciousIpEntity,
+                        findSuspiciousIpByField,
+                        saveSuspiciousIp,
+                        "IP address"
                 )
         );
 
-        assertEquals("This card number is already in use", exception.getMessage());
+        assertEquals("This IP address is already in use", exception.getMessage(), "The exception message should indicate a conflict.");
     }
 
     @Test
-    void addEntity_unsupportedDTOType() {
+    @DisplayName("Should throw IllegalArgumentException when given an unsupported DTO type")
+    void shouldThrowIllegalArgumentExceptionWhenUnsupportedDTOType() {
         // Arrange
         Object unsupportedDTO = new Object();
 
@@ -91,55 +98,54 @@ class EntityUtilsTest {
                 )
         );
 
-        assertEquals("Unsupported DTO type", exception.getMessage());
+        assertEquals("Unsupported DTO type", exception.getMessage(), "The exception message should indicate an unsupported DTO type.");
     }
 
     @Test
-    void removeEntity_successfulRemoval() {
+    @DisplayName("Should successfully remove an IP address when found")
+    void shouldSuccessfullyRemoveIPWhenFound() {
         // Arrange
         String field = "192.168.1.1";
         SuspiciousIp mockEntity = new SuspiciousIp(field);
 
-        Function<String, Optional<SuspiciousIp>> findEntityByField =
-                ip -> Optional.of(mockEntity);
+        findSuspiciousIpByField = ip -> Optional.of(mockEntity);
         Consumer<SuspiciousIp> deleteEntity = mock(Consumer.class);
 
         // Act
-        ResponseEntity<AntiFraudDeletionResponseDTO<SuspiciousIp>> response =
-                EntityUtils.removeEntity(
-                        field,
-                        findEntityByField,
-                        deleteEntity,
-                        "IP address"
-                );
+        ResponseEntity<AntiFraudDeletionResponseDTO<SuspiciousIp>> response = EntityUtils.removeEntity(
+                field,
+                findSuspiciousIpByField,
+                deleteEntity,
+                "IP address"
+        );
 
         // Assert
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
+        assertNotNull(response, "The response should not be null.");
+        assertEquals(200, response.getStatusCode().value(), "The response status code should be 200 OK.");
+        assertNotNull(response.getBody(), "The response body should not be null.");
         verify(deleteEntity).accept(mockEntity);
     }
 
     @Test
-    void removeEntity_notFoundThrowsException() {
+    @DisplayName("Should throw NotFoundException when the IP address is not found")
+    void shouldThrowNotFoundExceptionWhenIPNotFound() {
         // Arrange
         String field = "192.168.1.1";
 
-        Function<String, Optional<SuspiciousIp>> findEntityByField =
-                ip -> Optional.empty();
+        findSuspiciousIpByField = ip -> Optional.empty();
         Consumer<SuspiciousIp> deleteEntity = mock(Consumer.class);
 
         // Act & Assert
         NotFoundException exception = assertThrows(NotFoundException.class, () ->
                 EntityUtils.removeEntity(
                         field,
-                        findEntityByField,
+                        findSuspiciousIpByField,
                         deleteEntity,
                         "IP address"
                 )
         );
 
-        assertEquals("The specified IP address (192.168.1.1) was not found.", exception.getMessage());
+        assertEquals("The specified IP address (192.168.1.1) was not found.", exception.getMessage(), "The exception message should indicate the IP was not found.");
         verify(deleteEntity, never()).accept(any());
     }
 }

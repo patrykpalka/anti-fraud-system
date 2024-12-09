@@ -54,7 +54,7 @@ class TransactionControllerTest {
                 transactionController.addTransaction(validTransactionRequest);
 
         // Assert
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedResponse, response.getBody());
         verify(transactionService).addTransaction(validTransactionRequest);
     }
@@ -74,7 +74,7 @@ class TransactionControllerTest {
                 transactionController.addFeedback(feedbackRequest);
 
         // Assert
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedResponse, response.getBody());
         verify(transactionService).addFeedback(feedbackRequest);
     }
@@ -95,7 +95,7 @@ class TransactionControllerTest {
         ResponseEntity<?> response = transactionController.getHistory();
 
         // Assert
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedHistory, response.getBody());
         verify(transactionService).getHistory();
     }
@@ -116,7 +116,7 @@ class TransactionControllerTest {
                 transactionController.getHistoryByNumber(cardNumber);
 
         // Assert
-        assertEquals(200, response.getStatusCodeValue());
+            assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedHistory, response.getBody());
         verify(transactionService).getHistoryByNumber(cardNumber);
     }

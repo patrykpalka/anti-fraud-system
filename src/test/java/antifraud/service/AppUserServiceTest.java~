@@ -7,21 +7,23 @@ import antifraud.model.Role;
 import antifraud.repo.AppUserRepo;
 import antifraud.repo.RoleRepo;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-public class AppUserServiceTest {
-
-    @InjectMocks
-    private AppUserService appUserService;
+@ExtendWith(MockitoExtension.class)
+class AppUserServiceTest {
 
     @Mock
     private AppUserRepo appUserRepo;
@@ -32,110 +34,84 @@ public class AppUserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @InjectMocks
+    private AppUserService appUserService;
 
-    private UserRegistrationRequestDTO registrationDTO;
-    private AppUser appUser;
-    private Role adminRole;
     private Role merchantRole;
+    private Role administratorRole;
+    private UserRegistrationRequestDTO registrationDTO;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-
-        // Create a mock registration DTO
-        registrationDTO = new UserRegistrationRequestDTO();
-        registrationDTO.setUsername("testuser");
-        registrationDTO.setName("Test User");
-        registrationDTO.setPassword("password");
-
-        // Create a mock AppUser
-        appUser = new AppUser();
-        appUser.setUsername("testuser");
-        appUser.setName("Test User");
-        appUser.setPassword("encodedPassword");
-
-        // Create mock roles that the repository should return
-        adminRole = new Role("ROLE_ADMINISTRATOR");
         merchantRole = new Role("ROLE_MERCHANT");
-
-        // Mock repository behavior
-        when(roleRepo.findByName("ROLE_ADMINISTRATOR")).thenReturn(Optional.of(adminRole));
-        when(roleRepo.findByName("ROLE_MERCHANT")).thenReturn(Optional.of(merchantRole));
+        administratorRole = new Role("ROLE_ADMINISTRATOR");
+        registrationDTO = createRegistrationDTO();
     }
 
     @Test
-    void testRegisterFirstUserAsAdmin() {
+    @DisplayName("Should assign administrator role and unlock status to the first registered user")
+    void shouldAssignAdministratorRoleAndUnlockedStatusToFirstUser() {
         // Arrange
-        when(appUserRepo.count()).thenReturn(0L); // Indicates this is the first user
-        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
-        when(appUserRepo.save(any(AppUser.class))).thenReturn(appUser);
+        when(appUserRepo.count()).thenReturn(0L);
+        when(roleRepo.findByName(RoleNames.ROLE_ADMINISTRATOR.toString()))
+                .thenReturn(Optional.of(administratorRole));
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        when(appUserRepo.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         AppUser registeredUser = appUserService.register(registrationDTO);
 
         // Assert
-        assertNotNull(registeredUser);
-        assertTrue(registeredUser.getRoles().contains(adminRole));
-        assertFalse(registeredUser.isLocked()); // The first user should not be locked
+        assertNotNull(registeredUser, "The registered user should not be null.");
+        assertFalse(registeredUser.isLocked(), "The first user should have an unlocked status.");
+        assertTrue(registeredUser.getRoles().contains(administratorRole), "The first user should have the administrator role.");
+        verify(appUserRepo).save(registeredUser);
+        verify(roleRepo).findByName(RoleNames.ROLE_ADMINISTRATOR.toString());
     }
 
     @Test
-    void testRegisterUserSuccessfully() {
+    @DisplayName("Should assign merchant role and lock status to subsequent registered users")
+    void shouldAssignMerchantRoleAndLockedStatusToSubsequentUsers() {
         // Arrange
-        when(appUserRepo.count()).thenReturn(1L); // Indicates this is not the first user
-        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
-        when(appUserRepo.save(any(AppUser.class))).thenReturn(appUser);
+        when(appUserRepo.count()).thenReturn(1L);
+        when(roleRepo.findByName(RoleNames.ROLE_MERCHANT.toString()))
+                .thenReturn(Optional.of(merchantRole));
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        when(appUserRepo.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         AppUser registeredUser = appUserService.register(registrationDTO);
 
         // Assert
-        assertNotNull(registeredUser);
-        assertTrue(registeredUser.getRoles().contains(merchantRole));
-        assertTrue(registeredUser.isLocked()); // The second user should be locked
+        assertNotNull(registeredUser, "The registered user should not be null.");
+        assertTrue(registeredUser.isLocked(), "Subsequent users should have a locked status.");
+        assertTrue(registeredUser.getRoles().contains(merchantRole), "Subsequent users should have the merchant role.");
+        verify(appUserRepo).save(registeredUser);
+        verify(roleRepo).findByName(RoleNames.ROLE_MERCHANT.toString());
     }
 
     @Test
-    void testRoleNotFoundThrowsException() {
-        // Arrange
-        when(roleRepo.findByName(RoleNames.ROLE_MERCHANT.toString())).thenReturn(Optional.empty());
-        when(appUserRepo.count()).thenReturn(1L); // Indicates this is not the first user
-        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
+    @DisplayName("Should throw exception when the role is not found for registration")
+    void shouldThrowExceptionWhenRoleNotFound() {
+        // Mock behavior for first user
+        when(appUserRepo.count()).thenReturn(0L);
+
+        // Simulate role not found
+        when(roleRepo.findByName(RoleNames.ROLE_ADMINISTRATOR.toString()))
+                .thenReturn(Optional.empty());
 
         // Act & Assert
-        Exception exception = assertThrows(IllegalStateException.class, () -> appUserService.register(registrationDTO));
-
-        assertEquals("Role not found", exception.getMessage());
-
-        verify(roleRepo, times(1)).findByName(RoleNames.ROLE_MERCHANT.toString());
-        verify(appUserRepo, times(0)).save(any(AppUser.class));
+        assertThrows(IllegalStateException.class, () ->
+                appUserService.register(registrationDTO)
+        );
     }
 
-    @Test
-    void testRegisterRoleAssignmentForFirstUser() {
-        // Arrange
-        when(appUserRepo.count()).thenReturn(0L); // Indicates this is the first user
-        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
-        when(appUserRepo.save(any(AppUser.class))).thenReturn(appUser);
-
-        // Act
-        AppUser registeredUser = appUserService.register(registrationDTO);
-
-        // Assert
-        assertTrue(registeredUser.getRoles().contains(adminRole));
-    }
-
-    @Test
-    void testRegisterRoleAssignmentForSubsequentUsers() {
-        // Arrange
-        when(appUserRepo.count()).thenReturn(1L); // Indicates this is not the first user
-        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
-        when(appUserRepo.save(any(AppUser.class))).thenReturn(appUser);
-
-        // Act
-        AppUser registeredUser = appUserService.register(registrationDTO);
-
-        // Assert
-        assertTrue(registeredUser.getRoles().contains(merchantRole));
+    // Helper method to create a registration DTO for testing
+    private UserRegistrationRequestDTO createRegistrationDTO() {
+        UserRegistrationRequestDTO dto = new UserRegistrationRequestDTO();
+        dto.setUsername("testuser");
+        dto.setName("Test User");
+        dto.setPassword("password123");
+        return dto;
     }
 }

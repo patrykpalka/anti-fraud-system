@@ -49,6 +49,7 @@ public class UserServiceTest {
     private UserRoleRequestDTO roleRequestDTO;
     private UserStatusRequestDTO statusRequestDTO;
     private AppUser user;
+    private Role role;
 
     @BeforeEach
     void setUp() {
@@ -64,7 +65,7 @@ public class UserServiceTest {
 
         // Initialize user and role
         user = new AppUser("Test User", "testuser", "encodedPassword");
-        Role role = new Role();
+        role = new Role();
         role.setName("ROLE_MERCHANT");
         user.getRoles().add(role);
 
@@ -90,7 +91,7 @@ public class UserServiceTest {
 
         // Assert
         assertNotNull(response.getBody(), "Response body should not be null.");
-        assertEquals(201, response.getStatusCode().value(), "Status code should be 201 Created.");
+        assertEquals(201, response.getStatusCode().get, "Status code should be 201 Created.");
         assertEquals("testuser", response.getBody().getUsername(), "Username should match the input.");
         assertEquals("MERCHANT", response.getBody().getRole(), "Role should match the expected value.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
@@ -134,7 +135,7 @@ public class UserServiceTest {
 
         // Assert
         assertNotNull(response.getBody(), "Response body should not be null.");
-        assertEquals(200, response.getStatusCode().value(), "Status code should be 200 OK.");
+        assertEquals(200, response.getStatusCodeValue(), "Status code should be 200 OK.");
         assertEquals(2, response.getBody().size(), "Response should contain 2 users.");
         assertEquals("testuser", response.getBody().get(0).getUsername(), "First user's username should be 'testuser'.");
         assertEquals("MERCHANT", response.getBody().get(0).getRole(), "First user's role should be 'MERCHANT'.");
@@ -152,7 +153,7 @@ public class UserServiceTest {
         ResponseEntity<UserDeletionResponseDTO> response = userService.deleteUser("testuser");
 
         // Assert
-        assertEquals(200, response.getStatusCode().value(), "Status code should be 200 OK.");
+        assertEquals(200, response.getStatusCodeValue(), "Status code should be 200 OK.");
         assertEquals("Deleted successfully!", response.getBody().getStatus(), "Status message should indicate successful deletion.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
         verify(appUserRepo, times(1)).delete(user);
@@ -189,7 +190,7 @@ public class UserServiceTest {
         ResponseEntity<UserResponseDTO> response = userService.changeRole(roleRequestDTO);
 
         // Assert
-        assertEquals(200, response.getStatusCode().value(), "Status code should be 200 OK.");
+        assertEquals(200, response.getStatusCodeValue(), "Status code should be 200 OK.");
         assertEquals("MERCHANT", response.getBody().getRole(), "Updated role should be 'MERCHANT'.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
         verify(roleRepo, times(1)).findByName("ROLE_MERCHANT");
@@ -208,7 +209,7 @@ public class UserServiceTest {
         ResponseEntity<OperationResponseDTO> response = userService.changeLockedStatus(statusRequestDTO);
 
         // Assert
-        assertEquals(200, response.getStatusCode().value(), "Status code should be 200 OK.");
+        assertEquals(200, response.getStatusCodeValue(), "Status code should be 200 OK.");
         assertTrue(response.getBody().getStatus().contains("locked"), "Status should indicate 'locked'.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
         verify(appUserRepo, times(1)).save(mockUser);
@@ -276,7 +277,7 @@ public class UserServiceTest {
         ResponseEntity<OperationResponseDTO> response = userService.changeLockedStatus(statusRequestDTO);
 
         // Assert
-        assertEquals(400, response.getStatusCode().value(), "Expected 400 Bad Request for already locked user.");
+        assertEquals(400, response.getStatusCodeValue(), "Expected 400 Bad Request for already locked user.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
     }
 }

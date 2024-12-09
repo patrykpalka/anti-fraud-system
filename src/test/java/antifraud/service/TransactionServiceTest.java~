@@ -36,11 +36,11 @@ public class TransactionServiceTest {
     @Mock
     private TransactionRepo transactionRepo;
 
-    @Mock
-    private SuspiciousIpRepo suspiciousIpRepo;
-
-    @Mock
-    private StolenCardRepo stolenCardRepo;
+//    @Mock
+//    private SuspiciousIpRepo suspiciousIpRepo;
+//
+//    @Mock
+//    private StolenCardRepo stolenCardRepo;
 
     @InjectMocks
     private TransactionService transactionService;
