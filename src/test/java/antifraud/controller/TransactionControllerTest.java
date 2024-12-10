@@ -36,7 +36,6 @@ class TransactionControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Common setup for all tests
         validTransactionRequest = createValidTransactionRequest();
         validTransaction = createValidTransaction();
     }
@@ -44,45 +43,36 @@ class TransactionControllerTest {
     @Test
     @DisplayName("Should successfully add transaction and return ALLOWED response")
     void shouldAddTransactionSuccessfully() {
-        // Arrange
         TransactionResponseDTO expectedResponse = new TransactionResponseDTO("ALLOWED", "none");
         when(transactionService.addTransaction(validTransactionRequest))
                 .thenReturn(ResponseEntity.ok(expectedResponse));
 
-        // Act
         ResponseEntity<TransactionResponseDTO> response =
                 transactionController.addTransaction(validTransactionRequest);
 
-        // Assert
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedResponse, response.getBody());
         verify(transactionService).addTransaction(validTransactionRequest);
     }
 
     @Test
-    @DisplayName("Should successfully add feedback to a transaction")
     void shouldAddFeedbackSuccessfully() {
-        // Arrange
         FeedbackRequestDTO feedbackRequest = createValidFeedbackRequest();
         FeedbackResponseDTO expectedResponse = new FeedbackResponseDTO(validTransaction);
 
         when(transactionService.addFeedback(feedbackRequest))
                 .thenReturn(ResponseEntity.ok(expectedResponse));
 
-        // Act
         ResponseEntity<FeedbackResponseDTO> response =
                 transactionController.addFeedback(feedbackRequest);
 
-        // Assert
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedResponse, response.getBody());
         verify(transactionService).addFeedback(feedbackRequest);
     }
 
     @Test
-    @DisplayName("Should retrieve transaction history successfully")
     void shouldRetrieveTransactionHistory() {
-        // Arrange
         List<Transaction> transactions = createMockTransactions();
         List<FeedbackResponseDTO> expectedHistory = transactions.stream()
                 .map(FeedbackResponseDTO::new)
@@ -91,19 +81,15 @@ class TransactionControllerTest {
         when(transactionService.getHistory())
                 .thenReturn(ResponseEntity.ok(expectedHistory));
 
-        // Act
         ResponseEntity<?> response = transactionController.getHistory();
 
-        // Assert
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedHistory, response.getBody());
         verify(transactionService).getHistory();
     }
 
     @Test
-    @DisplayName("Should retrieve transaction history for specific card number")
     void shouldRetrieveTransactionHistoryByCardNumber() {
-        // Arrange
         String cardNumber = "4000000000000002";
         FeedbackResponseDTO feedbackResponse = new FeedbackResponseDTO(validTransaction);
         List<FeedbackResponseDTO> expectedHistory = List.of(feedbackResponse);
@@ -111,12 +97,10 @@ class TransactionControllerTest {
         when(transactionService.getHistoryByNumber(cardNumber))
                 .thenReturn(ResponseEntity.ok(expectedHistory));
 
-        // Act
         ResponseEntity<List<FeedbackResponseDTO>> response =
                 transactionController.getHistoryByNumber(cardNumber);
 
-        // Assert
-            assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedHistory, response.getBody());
         verify(transactionService).getHistoryByNumber(cardNumber);
     }

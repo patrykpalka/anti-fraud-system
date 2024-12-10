@@ -48,62 +48,82 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("Should successfully register a user")
     void shouldRegisterUserSuccessfully() {
+        // Arrange
         UserResponseDTO expectedResponse = new UserResponseDTO(validUser);
         when(userService.registerUser(validRegistrationRequest))
                 .thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(expectedResponse));
 
+        // Act
         ResponseEntity<UserResponseDTO> response = userController.registerUser(validRegistrationRequest);
 
+        // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(expectedResponse, response.getBody());
         verify(userService).registerUser(validRegistrationRequest);
     }
 
     @Test
+    @DisplayName("Should successfully get all users")
     void shouldGetAllUsersSuccessfully() {
+        // Arrange
         List<UserResponseDTO> expectedUsers = List.of(new UserResponseDTO(validUser));
         when(userService.getAllUsers()).thenReturn(ResponseEntity.ok(expectedUsers));
 
+        // Act
         ResponseEntity<List<UserResponseDTO>> response = userController.getAllUsers();
 
+        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(expectedUsers, response.getBody());
         verify(userService).getAllUsers();
     }
 
     @Test
+    @DisplayName("Should successfully delete a user")
     void shouldDeleteUserSuccessfully() {
+        // Arrange
         String username = "testUser";
         UserDeletionResponseDTO expectedResponse = UserDeletionResponseDTO.ofDeletion(username);
         when(userService.deleteUser(username)).thenReturn(ResponseEntity.ok(expectedResponse));
 
+        // Act
         ResponseEntity<UserDeletionResponseDTO> response = userController.deleteUser(username);
 
+        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(expectedResponse, response.getBody());
         verify(userService).deleteUser(username);
     }
 
     @Test
+    @DisplayName("Should successfully change user role")
     void shouldChangeUserRoleSuccessfully() {
+        // Arrange
         UserResponseDTO expectedResponse = new UserResponseDTO(validUser);
         when(userService.changeRole(validRoleRequest)).thenReturn(ResponseEntity.ok(expectedResponse));
 
+        // Act
         ResponseEntity<UserResponseDTO> response = userController.changeRole(validRoleRequest);
 
+        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(expectedResponse, response.getBody());
         verify(userService).changeRole(validRoleRequest);
     }
 
     @Test
+    @DisplayName("Should successfully change user locked status")
     void shouldChangeUserLockedStatusSuccessfully() {
+        // Arrange
         OperationResponseDTO expectedResponse = OperationResponseDTO.ofLockStatus(validUser);
         when(userService.changeLockedStatus(validStatusRequest)).thenReturn(ResponseEntity.ok(expectedResponse));
 
+        // Act
         ResponseEntity<OperationResponseDTO> response = userController.changeLockedStatus(validStatusRequest);
 
+        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(expectedResponse, response.getBody());
         verify(userService).changeLockedStatus(validStatusRequest);

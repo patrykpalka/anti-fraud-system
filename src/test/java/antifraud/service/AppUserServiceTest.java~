@@ -52,14 +52,17 @@ class AppUserServiceTest {
     @Test
     @DisplayName("Should assign administrator role and unlock status to the first registered user")
     void shouldAssignAdministratorRoleAndUnlockedStatusToFirstUser() {
+        // Arrange
         when(appUserRepo.count()).thenReturn(0L);
         when(roleRepo.findByName(RoleNames.ROLE_ADMINISTRATOR.toString()))
                 .thenReturn(Optional.of(administratorRole));
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         when(appUserRepo.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
+        // Act
         AppUser registeredUser = appUserService.register(registrationDTO);
 
+        // Assert
         assertNotNull(registeredUser, "The registered user should not be null.");
         assertFalse(registeredUser.isLocked(), "The first user should have an unlocked status.");
         assertTrue(registeredUser.getRoles().contains(administratorRole), "The first user should have the administrator role.");
@@ -70,14 +73,17 @@ class AppUserServiceTest {
     @Test
     @DisplayName("Should assign merchant role and lock status to subsequent registered users")
     void shouldAssignMerchantRoleAndLockedStatusToSubsequentUsers() {
+        // Arrange
         when(appUserRepo.count()).thenReturn(1L);
         when(roleRepo.findByName(RoleNames.ROLE_MERCHANT.toString()))
                 .thenReturn(Optional.of(merchantRole));
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         when(appUserRepo.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
+        // Act
         AppUser registeredUser = appUserService.register(registrationDTO);
 
+        // Assert
         assertNotNull(registeredUser, "The registered user should not be null.");
         assertTrue(registeredUser.isLocked(), "Subsequent users should have a locked status.");
         assertTrue(registeredUser.getRoles().contains(merchantRole), "Subsequent users should have the merchant role.");
@@ -86,11 +92,15 @@ class AppUserServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when the role is not found for registration")
     void shouldThrowExceptionWhenRoleNotFound() {
+        // Mock behavior for first user
         when(appUserRepo.count()).thenReturn(0L);
 
+        // Simulate role not found
         when(roleRepo.findByName(RoleNames.ROLE_ADMINISTRATOR.toString())).thenReturn(Optional.empty());
 
+        // Act & Assert
         assertThrows(NotFoundException.class, () ->
                 appUserService.register(registrationDTO)
         );

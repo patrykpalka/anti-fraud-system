@@ -56,50 +56,63 @@ public class UserServiceTest {
     }
 
     private void initTestData() {
+        // Initialize registration data
         registrationDTO = new UserRegistrationRequestDTO();
         registrationDTO.setUsername("testuser");
         registrationDTO.setName("Test User");
         registrationDTO.setPassword("password");
 
+        // Initialize user and role
         user = new AppUser("Test User", "testuser", "encodedPassword");
         Role role = new Role();
         role.setName("ROLE_MERCHANT");
         user.getRoles().add(role);
 
+        // Initialize role change request
         roleRequestDTO = new UserRoleRequestDTO();
         roleRequestDTO.setUsername("testuser");
         roleRequestDTO.setRole("MERCHANT");
 
+        // Initialize status change request
         statusRequestDTO = new UserStatusRequestDTO();
         statusRequestDTO.setUsername("testuser");
         statusRequestDTO.setOperation("LOCK");
     }
 
     @Test
-    void shouldRegisterUser() {
+    void shouldRegisterUserSuccessfully() {
+        // Arrange
         when(appUserRepo.findByUsername("testuser")).thenReturn(Optional.empty());
         when(appUserService.register(registrationDTO)).thenReturn(user);
 
+        // Act
         ResponseEntity<UserResponseDTO> response = userService.registerUser(registrationDTO);
 
-        assertNotNull(response.getBody());
-        assertEquals(201, response.getStatusCode().value());
-        assertEquals("testuser", response.getBody().getUsername());
-        assertEquals("MERCHANT", response.getBody().getRole());
+        // Assert
+        assertNotNull(response.getBody(), "Response body should not be null.");
+        assertEquals(201, response.getStatusCode().value(), "Status code should be 201 Created.");
+        assertEquals("testuser", response.getBody().getUsername(), "Username should match the input.");
+        assertEquals("MERCHANT", response.getBody().getRole(), "Role should match the expected value.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
         verify(appUserService, times(1)).register(registrationDTO);
     }
 
     @Test
-    void shouldThrowConflictWhenRegisteringExistingUser() {
+    @DisplayName("Should throw ConflictException when registering an existing user")
+    void shouldThrowConflictExceptionWhenRegisteringExistingUser() {
+        // Arrange
         when(appUserRepo.findByUsername("testuser")).thenReturn(Optional.of(new AppUser()));
 
-        assertThrows(ConflictException.class, () -> userService.registerUser(registrationDTO));
+        // Act & Assert
+        assertThrows(ConflictException.class, () -> userService.registerUser(registrationDTO),
+                "Expected ConflictException when the user already exists.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
     }
 
     @Test
-    void shouldReturnAllUsers() {
+    @DisplayName("Should return all users successfully")
+    void shouldReturnAllUsersSuccessfully() {
+        // Arrange
         List<AppUser> mockUsers = new ArrayList<>();
         AppUser user1 = new AppUser("Test User", "testuser", "password");
         Role role1 = new Role();
@@ -116,39 +129,51 @@ public class UserServiceTest {
 
         when(appUserRepo.findAllByOrderByIdAsc()).thenReturn(mockUsers);
 
+        // Act
         ResponseEntity<List<UserResponseDTO>> response = userService.getAllUsers();
 
-        assertNotNull(response.getBody());
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals(2, response.getBody().size());
-        assertEquals("testuser", response.getBody().get(0).getUsername());
-        assertEquals("MERCHANT", response.getBody().get(0).getRole());
+        // Assert
+        assertNotNull(response.getBody(), "Response body should not be null.");
+        assertEquals(200, response.getStatusCode().value(), "Status code should be 200 OK.");
+        assertEquals(2, response.getBody().size(), "Response should contain 2 users.");
+        assertEquals("testuser", response.getBody().get(0).getUsername(), "First user's username should be 'testuser'.");
+        assertEquals("MERCHANT", response.getBody().get(0).getRole(), "First user's role should be 'MERCHANT'.");
 
         verify(appUserRepo, times(1)).findAllByOrderByIdAsc();
     }
 
     @Test
-    void shouldDeleteUser() {
+    @DisplayName("Should delete user successfully")
+    void shouldDeleteUserSuccessfully() {
+        // Arrange
         when(appUserRepo.findByUsername("testuser")).thenReturn(Optional.of(user));
 
+        // Act
         ResponseEntity<UserDeletionResponseDTO> response = userService.deleteUser("testuser");
 
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals("Deleted successfully!", response.getBody().getStatus());
+        // Assert
+        assertEquals(200, response.getStatusCode().value(), "Status code should be 200 OK.");
+        assertEquals("Deleted successfully!", response.getBody().getStatus(), "Status message should indicate successful deletion.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
         verify(appUserRepo, times(1)).delete(user);
     }
 
     @Test
-    void shouldThrowNotFoundWhenDeletingNonExistentUser() {
+    @DisplayName("Should throw NotFoundException when deleting a non-existing user")
+    void shouldThrowNotFoundExceptionWhenDeletingNonExistentUser() {
+        // Arrange
         when(appUserRepo.findByUsername("testuser")).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> userService.deleteUser("testuser"));
+        // Act & Assert
+        assertThrows(NotFoundException.class, () -> userService.deleteUser("testuser"),
+                "Expected NotFoundException when user is not found.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
     }
 
     @Test
-    void shouldChangeRole() {
+    @DisplayName("Should change user role successfully")
+    void shouldChangeRoleSuccessfully() {
+        // Arrange
         AppUser mockUser = new AppUser("Test User", "testuser", "password");
         Role mockRole = new Role();
         mockRole.setName("ROLE_ADMINISTRATOR");
@@ -160,58 +185,98 @@ public class UserServiceTest {
         when(appUserRepo.findByUsername("testuser")).thenReturn(Optional.of(mockUser));
         when(roleRepo.findByName("ROLE_MERCHANT")).thenReturn(Optional.of(newRole));
 
+        // Act
         ResponseEntity<UserResponseDTO> response = userService.changeRole(roleRequestDTO);
 
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals("MERCHANT", response.getBody().getRole());
+        // Assert
+        assertEquals(200, response.getStatusCode().value(), "Status code should be 200 OK.");
+        assertEquals("MERCHANT", response.getBody().getRole(), "Updated role should be 'MERCHANT'.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
         verify(roleRepo, times(1)).findByName("ROLE_MERCHANT");
     }
 
     @Test
-    void shouldChangeLockStatus() {
+    @DisplayName("Should change lock status successfully")
+    void shouldChangeLockStatusSuccessfully() {
+        // Arrange
         AppUser mockUser = new AppUser("Test User", "testuser", "password");
         mockUser.setLocked(false);
 
         when(appUserRepo.findByUsername("testuser")).thenReturn(Optional.of(mockUser));
 
+        // Act
         ResponseEntity<OperationResponseDTO> response = userService.changeLockedStatus(statusRequestDTO);
 
-        assertEquals(200, response.getStatusCode().value());
-        assertTrue(response.getBody().getStatus().contains("locked"));
+        // Assert
+        assertEquals(200, response.getStatusCode().value(), "Status code should be 200 OK.");
+        assertTrue(response.getBody().getStatus().contains("locked"), "Status should indicate 'locked'.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
         verify(appUserRepo, times(1)).save(mockUser);
     }
 
     @Test
-    void shouldThrowBadRequestWhenChangingLockStatusForLockedUser() {
+    void testChangeLockStatusBadRequest() {
+        AppUser mockUser = new AppUser("Admin User", "admin", "password");
+        mockUser.setRoles(Set.of(new Role("ROLE_ADMINISTRATOR")));
+
+        UserStatusRequestDTO statusRequest = new UserStatusRequestDTO();
+        statusRequest.setUsername("admin");
+        statusRequest.setOperation("LOCK");
+
+        when(appUserRepo.findByUsername("admin")).thenReturn(Optional.of(mockUser));
+
+        assertThrows(BadRequestException.class, () -> userService.changeLockedStatus(statusRequest));
+        verify(appUserRepo, times(1)).findByUsername("admin");
+    }
+
+    @Test
+    @DisplayName("Should throw BadRequestException for invalid role change")
+    void shouldThrowBadRequestExceptionForInvalidRoleChange() {
+        // Arrange
+        UserRoleRequestDTO invalidRoleRequestDTO = new UserRoleRequestDTO();
+        invalidRoleRequestDTO.setUsername("testuser");
+        invalidRoleRequestDTO.setRole("INVALID_ROLE");
+
+        // Act & Assert
+        assertThrows(BadRequestException.class, () -> userService.changeRole(invalidRoleRequestDTO),
+                "Expected BadRequestException when changing to an invalid role.");
+    }
+
+    @Test
+    @DisplayName("Should throw ConflictException for role change to current role")
+    void shouldThrowConflictExceptionForRoleChangeToCurrentRole() {
+        // Arrange
+        UserRoleRequestDTO roleRequestDTO = new UserRoleRequestDTO();
+        roleRequestDTO.setUsername("testuser");
+        roleRequestDTO.setRole("MERCHANT");
+
+        when(appUserRepo.findByUsername("testuser")).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        assertThrows(ConflictException.class, () -> userService.changeRole(roleRequestDTO),
+                "Expected ConflictException when changing to the same role.");
+        verify(appUserRepo, times(1)).findByUsername("testuser");
+        verify(roleRepo, times(0)).findByName("ROLE_MERCHANT");
+    }
+
+    @Test
+    @DisplayName("Should return 400 when user is already locked")
+    void shouldReturnBadRequestWhenUserIsAlreadyLocked() {
+        // Arrange
+        UserStatusRequestDTO statusRequestDTO = new UserStatusRequestDTO();
+        statusRequestDTO.setUsername("testuser");
+        statusRequestDTO.setOperation("LOCK");
+
         AppUser mockUser = new AppUser("Test User", "testuser", "password");
         mockUser.setLocked(true);
 
         when(appUserRepo.findByUsername("testuser")).thenReturn(Optional.of(mockUser));
 
+        // Act
         ResponseEntity<OperationResponseDTO> response = userService.changeLockedStatus(statusRequestDTO);
 
-        assertEquals(400, response.getStatusCode().value());
+        // Assert
+        assertEquals(400, response.getStatusCode().value(), "Expected 400 Bad Request for already locked user.");
         verify(appUserRepo, times(1)).findByUsername("testuser");
-    }
-
-    @Test
-    void shouldThrowBadRequestForInvalidRoleChange() {
-        UserRoleRequestDTO invalidRoleRequestDTO = new UserRoleRequestDTO();
-        invalidRoleRequestDTO.setUsername("testuser");
-        invalidRoleRequestDTO.setRole("INVALID_ROLE");
-
-        assertThrows(BadRequestException.class, () -> userService.changeRole(invalidRoleRequestDTO));
-    }
-
-    @Test
-    void shouldThrowConflictForRoleChangeToCurrentRole() {
-        roleRequestDTO.setRole("MERCHANT");
-        when(appUserRepo.findByUsername("testuser")).thenReturn(Optional.of(user));
-
-        assertThrows(ConflictException.class, () -> userService.changeRole(roleRequestDTO));
-        verify(appUserRepo, times(1)).findByUsername("testuser");
-        verify(roleRepo, times(0)).findByName("ROLE_MERCHANT");
     }
 }

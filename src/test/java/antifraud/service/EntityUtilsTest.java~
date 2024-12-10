@@ -36,10 +36,13 @@ class EntityUtilsTest {
     }
 
     @Test
+    @DisplayName("Should successfully add a new IP address when not already present")
     void shouldSuccessfullyAddIPWhenNotPresent() {
+        // Arrange
         SuspiciousIpRequestDTO requestDTO = new SuspiciousIpRequestDTO();
         requestDTO.setIp("192.168.1.1");
 
+        // Act
         ResponseEntity<SuspiciousIp> response = EntityUtils.addEntity(
                 requestDTO,
                 toSuspiciousIpEntity,
@@ -48,6 +51,7 @@ class EntityUtilsTest {
                 "IP address"
         );
 
+        // Assert
         assertNotNull(response, "The response should not be null.");
         assertEquals(200, response.getStatusCode().value(), "The response status code should be 200 OK.");
         assertNotNull(response.getBody(), "The response body should not be null.");
@@ -55,12 +59,15 @@ class EntityUtilsTest {
     }
 
     @Test
+    @DisplayName("Should throw ConflictException when the IP address already exists")
     void shouldThrowConflictExceptionWhenIPAlreadyExists() {
+        // Arrange
         SuspiciousIpRequestDTO requestDTO = new SuspiciousIpRequestDTO();
         requestDTO.setIp("192.168.1.1");
 
         findSuspiciousIpByField = ip -> Optional.of(new SuspiciousIp(ip));
 
+        // Act & Assert
         ConflictException exception = assertThrows(ConflictException.class, () ->
                 EntityUtils.addEntity(
                         requestDTO,
@@ -77,8 +84,10 @@ class EntityUtilsTest {
     @Test
     @DisplayName("Should throw IllegalArgumentException when given an unsupported DTO type")
     void shouldThrowIllegalArgumentExceptionWhenUnsupportedDTOType() {
+        // Arrange
         Object unsupportedDTO = new Object();
 
+        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 EntityUtils.addEntity(
                         unsupportedDTO,
@@ -93,13 +102,16 @@ class EntityUtilsTest {
     }
 
     @Test
+    @DisplayName("Should successfully remove an IP address when found")
     void shouldSuccessfullyRemoveIPWhenFound() {
+        // Arrange
         String field = "192.168.1.1";
         SuspiciousIp mockEntity = new SuspiciousIp(field);
 
         findSuspiciousIpByField = ip -> Optional.of(mockEntity);
         Consumer<SuspiciousIp> deleteEntity = mock(Consumer.class);
 
+        // Act
         ResponseEntity<AntiFraudDeletionResponseDTO<SuspiciousIp>> response = EntityUtils.removeEntity(
                 field,
                 findSuspiciousIpByField,
@@ -107,6 +119,7 @@ class EntityUtilsTest {
                 "IP address"
         );
 
+        // Assert
         assertNotNull(response, "The response should not be null.");
         assertEquals(200, response.getStatusCode().value(), "The response status code should be 200 OK.");
         assertNotNull(response.getBody(), "The response body should not be null.");
@@ -114,12 +127,15 @@ class EntityUtilsTest {
     }
 
     @Test
+    @DisplayName("Should throw NotFoundException when the IP address is not found")
     void shouldThrowNotFoundExceptionWhenIPNotFound() {
+        // Arrange
         String field = "192.168.1.1";
 
         findSuspiciousIpByField = ip -> Optional.empty();
         Consumer<SuspiciousIp> deleteEntity = mock(Consumer.class);
 
+        // Act & Assert
         NotFoundException exception = assertThrows(NotFoundException.class, () ->
                 EntityUtils.removeEntity(
                         field,

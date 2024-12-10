@@ -76,11 +76,15 @@ public class TransactionServiceTest {
     }
 
     @Test
+    @DisplayName("Should successfully add a new transaction")
     void shouldSuccessfullyAddTransaction() {
+        // Arrange
         when(transactionRepo.save(any(Transaction.class))).thenReturn(transaction);
 
+        // Act
         ResponseEntity<TransactionResponseDTO> response = transactionService.addTransaction(transactionDTO);
 
+        // Assert
         assertNotNull(response, "Response should not be null.");
         assertEquals(TransactionType.ALLOWED.toString(), response.getBody().getResult(), "Transaction result should be ALLOWED.");
         verify(transactionRepo, times(1)).save(any(Transaction.class));
@@ -89,8 +93,10 @@ public class TransactionServiceTest {
     @Test
     @DisplayName("Should throw NotFoundException when adding feedback to a non-existent transaction")
     void shouldThrowNotFoundExceptionWhenAddingFeedbackToNonExistentTransaction() {
+        // Arrange
         when(transactionRepo.findById(1L)).thenReturn(Optional.empty());
 
+        // Act & Assert
         assertThrows(NotFoundException.class, () -> transactionService.addFeedback(feedbackDTO),
                 "Expected NotFoundException when transaction is not found.");
         verify(transactionRepo, times(1)).findById(1L);
@@ -99,9 +105,11 @@ public class TransactionServiceTest {
     @Test
     @DisplayName("Should throw ConflictException when feedback is already set on a transaction")
     void shouldThrowConflictExceptionWhenFeedbackAlreadySet() {
+        // Arrange
         transaction.setFeedback("APPROVED");
         when(transactionRepo.findById(1L)).thenReturn(Optional.of(transaction));
 
+        // Act & Assert
         assertThrows(ConflictException.class, () -> transactionService.addFeedback(feedbackDTO),
                 "Expected ConflictException when feedback is already set on the transaction.");
         verify(transactionRepo, times(1)).findById(1L);
@@ -111,9 +119,11 @@ public class TransactionServiceTest {
     @Test
     @DisplayName("Should throw UnprocessableEntityException when feedback and result are the same")
     void shouldThrowUnprocessableEntityExceptionWhenFeedbackAndResultAreTheSame() {
+        // Arrange
         transaction.setResult("APPROVED");
         when(transactionRepo.findById(1L)).thenReturn(Optional.of(transaction));
 
+        // Act & Assert
         UnprocessableEntityException exception = assertThrows(UnprocessableEntityException.class, () -> transactionService.addFeedback(feedbackDTO));
         assertEquals("Result and feedback cannot be the same", exception.getMessage(), "Expected exception message did not match.");
         verify(transactionRepo, times(1)).findById(1L);
@@ -121,12 +131,16 @@ public class TransactionServiceTest {
     }
 
     @Test
+    @DisplayName("Should return transaction history")
     void shouldReturnTransactionHistory() {
+        // Arrange
         List<Transaction> transactions = Arrays.asList(new Transaction(), new Transaction());
         when(transactionRepo.findAllByOrderByIdAsc()).thenReturn(transactions);
 
+        // Act
         ResponseEntity<?> response = transactionService.getHistory();
 
+        // Assert
         assertNotNull(response, "Response should not be null.");
         assertEquals(2, ((List<?>) response.getBody()).size(), "The transaction history size should match.");
         verify(transactionRepo, times(1)).findAllByOrderByIdAsc();
@@ -135,22 +149,28 @@ public class TransactionServiceTest {
     @Test
     @DisplayName("Should throw NotFoundException when no transactions are found for a card number")
     void shouldThrowNotFoundExceptionWhenNoTransactionsFoundForCardNumber() {
+        // Arrange
         String cardNumber = "1234567890123456";
         when(transactionRepo.findAllByNumberOrderByIdAsc(cardNumber)).thenReturn(Arrays.asList());
 
+        // Act & Assert
         assertThrows(NotFoundException.class, () -> transactionService.getHistoryByNumber(cardNumber),
                 "Expected NotFoundException when no transactions are found for the given card number.");
         verify(transactionRepo, times(1)).findAllByNumberOrderByIdAsc(cardNumber);
     }
 
     @Test
+    @DisplayName("Should return transaction history for a specific card number")
     void shouldReturnTransactionHistoryForCardNumber() {
+        // Arrange
         String cardNumber = "1234567890123456";
         List<Transaction> transactions = Arrays.asList(new Transaction(), new Transaction());
         when(transactionRepo.findAllByNumberOrderByIdAsc(cardNumber)).thenReturn(transactions);
 
+        // Act
         ResponseEntity<List<FeedbackResponseDTO>> response = transactionService.getHistoryByNumber(cardNumber);
 
+        // Assert
         assertNotNull(response, "Response should not be null.");
         assertEquals(2, response.getBody().size(), "The transaction history size should match.");
         verify(transactionRepo, times(1)).findAllByNumberOrderByIdAsc(cardNumber);
@@ -159,12 +179,15 @@ public class TransactionServiceTest {
     @Test
     @DisplayName("Should update limits correctly for an allowed feedback on a manual processing transaction")
     void shouldUpdateLimitsCorrectlyForAllowedFeedbackOnManualProcessing() {
+        // Arrange
         transaction.setResult(TransactionType.MANUAL_PROCESSING.toString());
         transaction.setAmount(500L);
         long initialMaxAllowed = Constants.MAX_ALLOWED;
 
+        // Act
         ConstantsUtil.updateTransactionLimit(TransactionType.ALLOWED.toString(), transaction);
 
+        // Assert
         long expectedMaxAllowed = (long) Math.ceil(0.8 * initialMaxAllowed + 0.2 * 500);
         assertEquals(expectedMaxAllowed, Constants.MAX_ALLOWED, "MAX_ALLOWED should be updated correctly.");
     }
@@ -172,13 +195,16 @@ public class TransactionServiceTest {
     @Test
     @DisplayName("Should update limits correctly for an allowed feedback on a prohibited transaction")
     void shouldUpdateLimitsCorrectlyForAllowedFeedbackOnProhibitedTransaction() {
+        // Arrange
         transaction.setResult(TransactionType.PROHIBITED.toString());
         transaction.setAmount(1000L);
         long initialMaxAllowed = Constants.MAX_ALLOWED;
         long initialMaxManualProcessing = Constants.MAX_MANUAL_PROCESSING;
 
+        // Act
         ConstantsUtil.updateTransactionLimit(TransactionType.ALLOWED.toString(), transaction);
 
+        // Assert
         long expectedMaxAllowed = (long) Math.ceil(0.8 * initialMaxAllowed + 0.2 * 1000);
         long expectedMaxManualProcessing = (long) Math.ceil(0.8 * initialMaxManualProcessing + 0.2 * 1000);
         assertEquals(expectedMaxAllowed, Constants.MAX_ALLOWED, "MAX_ALLOWED should be updated correctly.");
@@ -188,12 +214,15 @@ public class TransactionServiceTest {
     @Test
     @DisplayName("Should update limits correctly for manual feedback on an allowed transaction")
     void shouldUpdateLimitsCorrectlyForManualFeedbackOnAllowedTransaction() {
+        // Arrange
         transaction.setResult(TransactionType.ALLOWED.toString());
         transaction.setAmount(300L);
         long initialMaxAllowed = Constants.MAX_ALLOWED;
 
+        // Act
         ConstantsUtil.updateTransactionLimit(TransactionType.MANUAL_PROCESSING.toString(), transaction);
 
+        // Assert
         long expectedMaxAllowed = (long) Math.ceil(0.8 * initialMaxAllowed - 0.2 * 300);
         assertEquals(expectedMaxAllowed, Constants.MAX_ALLOWED, "MAX_ALLOWED should be updated correctly.");
     }
@@ -201,12 +230,15 @@ public class TransactionServiceTest {
     @Test
     @DisplayName("Should update limits correctly for manual feedback on a prohibited transaction")
     void shouldUpdateLimitsCorrectlyForManualFeedbackOnProhibitedTransaction() {
+        // Arrange
         transaction.setResult(TransactionType.PROHIBITED.toString());
         transaction.setAmount(2000L);
         long initialMaxManualProcessing = Constants.MAX_MANUAL_PROCESSING;
 
+        // Act
         ConstantsUtil.updateTransactionLimit(TransactionType.MANUAL_PROCESSING.toString(), transaction);
 
+        // Assert
         long expectedMaxManualProcessing = (long) Math.ceil(0.8 * initialMaxManualProcessing + 0.2 * 2000);
         assertEquals(expectedMaxManualProcessing, Constants.MAX_MANUAL_PROCESSING, "MAX_MANUAL_PROCESSING should be updated correctly.");
     }
@@ -214,13 +246,16 @@ public class TransactionServiceTest {
     @Test
     @DisplayName("Should update limits correctly for prohibited feedback on an allowed transaction")
     void shouldUpdateLimitsCorrectlyForProhibitedFeedbackOnAllowedTransaction() {
+        // Arrange
         transaction.setResult(TransactionType.ALLOWED.toString());
         transaction.setAmount(250L);
         long initialMaxAllowed = Constants.MAX_ALLOWED;
         long initialMaxManualProcessing = Constants.MAX_MANUAL_PROCESSING;
 
+        // Act
         ConstantsUtil.updateTransactionLimit(TransactionType.PROHIBITED.toString(), transaction);
 
+        // Assert
         long expectedMaxAllowed = (long) Math.ceil(0.8 * initialMaxAllowed - 0.2 * 250);
         long expectedMaxManualProcessing = (long) Math.ceil(0.8 * initialMaxManualProcessing - 0.2 * 250);
         assertEquals(expectedMaxAllowed, Constants.MAX_ALLOWED, "MAX_ALLOWED should be updated correctly.");
@@ -230,18 +265,23 @@ public class TransactionServiceTest {
     @Test
     @DisplayName("Should update limits correctly for prohibited feedback on a manual processing transaction")
     void shouldUpdateLimitsCorrectlyForProhibitedFeedbackOnManualProcessing() {
+        // Arrange
         transaction.setResult(TransactionType.MANUAL_PROCESSING.toString());
         transaction.setAmount(1500L);
         long initialMaxManualProcessing = Constants.MAX_MANUAL_PROCESSING;
 
+        // Act
         ConstantsUtil.updateTransactionLimit(TransactionType.PROHIBITED.toString(), transaction);
 
+        // Assert
         long expectedMaxManualProcessing = (long) Math.ceil(0.8 * initialMaxManualProcessing - 0.2 * 1500);
         assertEquals(expectedMaxManualProcessing, Constants.MAX_MANUAL_PROCESSING, "MAX_MANUAL_PROCESSING should be updated correctly.");
     }
 
     @Test
+    @DisplayName("Should update limits when adding feedback")
     void shouldUpdateLimitsWhenAddingFeedback() {
+        // Arrange
         transaction.setResult(TransactionType.MANUAL_PROCESSING.toString());
         transaction.setFeedback(null);
         when(transactionRepo.findById(1L)).thenReturn(Optional.of(transaction));
@@ -250,8 +290,10 @@ public class TransactionServiceTest {
         feedbackRequest.setTransactionId(1L);
         feedbackRequest.setFeedback(TransactionType.ALLOWED.toString());
 
+        // Act
         ResponseEntity<FeedbackResponseDTO> response = transactionService.addFeedback(feedbackRequest);
 
+        // Assert
         assertNotNull(response, "Response should not be null.");
         assertEquals(TransactionType.ALLOWED.toString(), response.getBody().getFeedback(), "Feedback should be updated correctly.");
         verify(transactionRepo, times(1)).save(transaction);
