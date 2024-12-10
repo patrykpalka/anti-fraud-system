@@ -1,0 +1,5 @@
+package antifraud;
+
+public class UserDetailsServiceImplTest {
+    
+}
