@@ -113,6 +113,11 @@ public class CardNumberValidatorTest {
         verifyViolation(mockContext, "Card number must be 16 digits");
     }
 
+    @Test
+    void testEdgeCaseWithOneDigit() {
+        assertFalse(validator.isValid("1", mockContext));
+    }
+
     private void verifyViolation(ConstraintValidatorContext context, String expectedMessage) {
         verify(context).disableDefaultConstraintViolation();
         verify(context).buildConstraintViolationWithTemplate(expectedMessage);
