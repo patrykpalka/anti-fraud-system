@@ -214,4 +214,23 @@ public class UserServiceTest {
         verify(appUserRepo, times(1)).findByUsername("testuser");
         verify(roleRepo, times(0)).findByName("ROLE_MERCHANT");
     }
+
+    @Test
+    void shouldThrowBadRequestWhenChangingLockStatusForAdministrator() {
+        AppUser adminUser = new AppUser("Admin User", "adminuser", "password");
+        Role adminRole = new Role();
+        adminRole.setName("ROLE_ADMINISTRATOR");
+        adminUser.setRoles(Set.of(adminRole));
+        adminUser.setLocked(false);
+
+        when(appUserRepo.findByUsername("adminuser")).thenReturn(Optional.of(adminUser));
+
+        UserStatusRequestDTO statusRequestDTO = new UserStatusRequestDTO();
+        statusRequestDTO.setUsername("adminuser");
+        statusRequestDTO.setOperation("LOCK");
+
+        BadRequestException thrown = assertThrows(BadRequestException.class, () -> userService.changeLockedStatus(statusRequestDTO));
+        assertEquals("Cannot change locked status for Administrator", thrown.getMessage());
+        verify(appUserRepo, times(1)).findByUsername("adminuser");
+    }
 }
