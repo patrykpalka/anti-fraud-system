@@ -3,8 +3,8 @@ package antifraud.service;
 import antifraud.dto.request.UserRegistrationRequestDTO;
 import antifraud.dto.request.UserRoleRequestDTO;
 import antifraud.dto.request.UserStatusRequestDTO;
-import antifraud.dto.response.UserDeletionResponseDTO;
 import antifraud.dto.response.OperationResponseDTO;
+import antifraud.dto.response.UserDeletionResponseDTO;
 import antifraud.dto.response.UserResponseDTO;
 import antifraud.exception.BadRequestException;
 import antifraud.exception.ConflictException;
@@ -13,18 +13,21 @@ import antifraud.model.AppUser;
 import antifraud.model.Role;
 import antifraud.repo.AppUserRepo;
 import antifraud.repo.RoleRepo;
-import org.springframework.transaction.annotation.Transactional;
+import logging.events.UserRegisteredEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static antifraud.service.utils.ValidationUtil.*;
+import static antifraud.service.utils.ValidationUtil.isUserAnAdministrator;
+import static antifraud.service.utils.ValidationUtil.isValidUserRoleChange;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ public class UserService {
     private final AppUserRepo appUserRepo;
     private final RoleRepo roleRepo;
     private final AppUserService appUserService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public ResponseEntity<UserResponseDTO> registerUser(UserRegistrationRequestDTO registration) {
@@ -41,6 +45,7 @@ public class UserService {
         }
 
         AppUser registeredUser = appUserService.register(registration);
+        eventPublisher.publishEvent(new UserRegisteredEvent(registeredUser));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponseDTO(registeredUser));
     }
