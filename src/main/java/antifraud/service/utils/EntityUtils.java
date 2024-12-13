@@ -29,8 +29,8 @@ public class EntityUtils {
      * @throws ConflictException   if an entity with the specified field already exists
      * @throws IllegalArgumentException if the DTO type is unsupported
      */
-    public static <T, R> ResponseEntity<T> addEntity(R requestDTO, Function<R, T> toEntity,
-            Function<String, Optional<T>> findEntityByField, Consumer<T> saveEntity, String entityType) {
+    public static <T, R> ResponseEntity<T> addEntity(R requestDTO, Function<R, T> toEntity, Function<String,
+            Optional<T>> findEntityByField, Consumer<T> saveEntity, String entityType, Consumer<T> eventPublisher) {
         // Extract the field value from the DTO
         String field = getFieldFromDTO(requestDTO, dto -> {
             if (dto instanceof SuspiciousIpRequestDTO) return ((SuspiciousIpRequestDTO) dto).getIp();
@@ -48,6 +48,11 @@ public class EntityUtils {
 
         // Save the new entity
         saveEntity.accept(entity);
+
+        // If an event publisher is provided, publish an event for the added entity
+        if (eventPublisher != null) {
+            eventPublisher.accept(entity);
+        }
 
         // Return the created entity
         return ResponseEntity.ok(entity);
@@ -78,12 +83,21 @@ public class EntityUtils {
      * @throws NotFoundException   if the specified entity is not found
      */
     public static <T extends RemovableEntity> ResponseEntity<AntiFraudDeletionResponseDTO<T>> removeEntity(
-            String field, Function<String, Optional<T>> findEntityByField, Consumer<T> deleteEntity, String entityType) {
+            String field, Function<String, Optional<T>> findEntityByField, Consumer<T> deleteEntity, String entityType,
+            Consumer<T> eventPublisher) {
+        // Retrieve the entity using the specified field; throw an exception if not found
         T entity = findEntityByField.apply(field)
                 .orElseThrow(() -> new NotFoundException("The specified " + entityType + " (" + field + ") was not found."));
 
+        // Delete the retrieved entity
         deleteEntity.accept(entity);
 
+        // If an event publisher is provided, publish an event for the deleted entity
+        if (eventPublisher != null) {
+            eventPublisher.accept(entity);
+        }
+
+        // Return a response entity containing the deletion response DTO with the deleted entity
         return ResponseEntity.ok(new AntiFraudDeletionResponseDTO<>(entity));
     }
 }

@@ -27,12 +27,14 @@ class EntityUtilsTest {
     private Function<SuspiciousIpRequestDTO, SuspiciousIp> toSuspiciousIpEntity;
     private Function<String, Optional<SuspiciousIp>> findSuspiciousIpByField;
     private Consumer<SuspiciousIp> saveSuspiciousIp;
+    private Consumer<SuspiciousIp> mockEventPublisher;
 
     @BeforeEach
     void setUp() {
         toSuspiciousIpEntity = dto -> new SuspiciousIp(dto.getIp());
         findSuspiciousIpByField = ip -> Optional.empty();
         saveSuspiciousIp = ip -> {};
+        mockEventPublisher = mock(Consumer.class);
     }
 
     @Test
@@ -45,13 +47,15 @@ class EntityUtilsTest {
                 toSuspiciousIpEntity,
                 findSuspiciousIpByField,
                 saveSuspiciousIp,
-                "IP address"
+                "IP address",
+                mockEventPublisher
         );
 
         assertNotNull(response, "The response should not be null.");
         assertEquals(200, response.getStatusCode().value(), "The response status code should be 200 OK.");
         assertNotNull(response.getBody(), "The response body should not be null.");
         assertEquals("192.168.1.1", response.getBody().getIp(), "The IP in the response should match the input.");
+        verify(mockEventPublisher, times(1)).accept(response.getBody());
     }
 
     @Test
@@ -67,15 +71,16 @@ class EntityUtilsTest {
                         toSuspiciousIpEntity,
                         findSuspiciousIpByField,
                         saveSuspiciousIp,
-                        "IP address"
+                        "IP address",
+                        mockEventPublisher
                 )
         );
 
         assertEquals("This IP address is already in use", exception.getMessage(), "The exception message should indicate a conflict.");
+        verify(mockEventPublisher, never()).accept(any());
     }
 
     @Test
-    @DisplayName("Should throw IllegalArgumentException when given an unsupported DTO type")
     void shouldThrowIllegalArgumentExceptionWhenUnsupportedDTOType() {
         Object unsupportedDTO = new Object();
 
@@ -85,11 +90,13 @@ class EntityUtilsTest {
                         dto -> null,
                         field -> Optional.empty(),
                         entity -> {},
-                        "unsupported type"
+                        "unsupported type",
+                        mockEventPublisher
                 )
         );
 
         assertEquals("Unsupported DTO type", exception.getMessage(), "The exception message should indicate an unsupported DTO type.");
+        verify(mockEventPublisher, never()).accept(any());
     }
 
     @Test
@@ -104,13 +111,15 @@ class EntityUtilsTest {
                 field,
                 findSuspiciousIpByField,
                 deleteEntity,
-                "IP address"
+                "IP address",
+                mockEventPublisher
         );
 
         assertNotNull(response, "The response should not be null.");
         assertEquals(200, response.getStatusCode().value(), "The response status code should be 200 OK.");
         assertNotNull(response.getBody(), "The response body should not be null.");
-        verify(deleteEntity).accept(mockEntity);
+        verify(deleteEntity, times(1)).accept(mockEntity);
+        verify(mockEventPublisher, times(1)).accept(mockEntity);
     }
 
     @Test
@@ -125,11 +134,13 @@ class EntityUtilsTest {
                         field,
                         findSuspiciousIpByField,
                         deleteEntity,
-                        "IP address"
+                        "IP address",
+                        mockEventPublisher
                 )
         );
 
         assertEquals("The specified IP address (192.168.1.1) was not found.", exception.getMessage(), "The exception message should indicate the IP was not found.");
         verify(deleteEntity, never()).accept(any());
+        verify(mockEventPublisher, never()).accept(any());
     }
 }
