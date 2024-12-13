@@ -6,6 +6,9 @@ import antifraud.dto.request.TransactionRequestDTO;
 import antifraud.dto.response.TransactionResponseDTO;
 import antifraud.enums.TransactionType;
 import antifraud.exception.*;
+import antifraud.logging.events.transaction.FeedbackAddedEvent;
+import antifraud.logging.events.transaction.FraudulentTransactionDetectedEvent;
+import antifraud.logging.events.transaction.TransactionCreatedEvent;
 import antifraud.model.Transaction;
 import antifraud.repo.StolenCardRepo;
 import antifraud.repo.SuspiciousIpRepo;
@@ -14,7 +17,10 @@ import antifraud.validation.annotation.ValidCardNumber;
 import antifraud.validation.transaction.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.http.parser.Authorization;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,17 +36,22 @@ public class TransactionService {
     private final TransactionRepo transactionRepo;
     private final SuspiciousIpRepo suspiciousIpRepo;
     private final StolenCardRepo stolenCardRepo;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public ResponseEntity<TransactionResponseDTO> addTransaction(TransactionRequestDTO transactionDTO) {
+    public ResponseEntity<TransactionResponseDTO> addTransaction(TransactionRequestDTO transactionDTO, Authentication authentication) {
         List<String> reasonsForRejection = new ArrayList<>();
         String type = reviewTransaction(transactionDTO, reasonsForRejection);
 
         Transaction transaction = transactionDTO.getTransaction();
         transaction.setResult(type);
         transactionRepo.save(transaction);
+        eventPublisher.publishEvent(new TransactionCreatedEvent(transaction.getId(), transaction.getAmount(), type, authentication.getName()));
 
-        String info = reasonsForRejection.isEmpty() ? "none" : reasonsForRejection.stream().sorted().collect(Collectors.joining(", "));
+        boolean isAllowed = reasonsForRejection.isEmpty();
+        String info = isAllowed ? "none" : reasonsForRejection.stream().sorted().collect(Collectors.joining(", "));
+        if (!isAllowed) eventPublisher.publishEvent(new FraudulentTransactionDetectedEvent(transaction.getId(), reasonsForRejection));
+
         return ResponseEntity.ok(new TransactionResponseDTO(type, info));
     }
 
@@ -63,7 +74,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public ResponseEntity<FeedbackResponseDTO> addFeedback(FeedbackRequestDTO feedbackDTO) {
+    public ResponseEntity<FeedbackResponseDTO> addFeedback(FeedbackRequestDTO feedbackDTO, Authentication authentication) {
         Transaction transaction = transactionRepo.findById(feedbackDTO.getTransactionId())
                 .orElseThrow(() -> new NotFoundException("Transaction not found"));
 
@@ -80,6 +91,7 @@ public class TransactionService {
 
         transaction.setFeedback(feedback);
         transactionRepo.save(transaction);
+        eventPublisher.publishEvent(new FeedbackAddedEvent(transaction.getId(), feedback, authentication.getName()));
 
         return ResponseEntity.ok(new FeedbackResponseDTO(transaction));
     }

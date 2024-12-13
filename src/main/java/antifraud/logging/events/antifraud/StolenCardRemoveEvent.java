@@ -1,3 +1,4 @@
 package antifraud.logging.events.antifraud;
 
-public record StolenCardRemoveEvent(String cardNumber) {}
+public record StolenCardRemoveEvent(String cardNumber) {
+}

@@ -4,6 +4,7 @@ import antifraud.dto.request.FeedbackRequestDTO;
 import antifraud.dto.request.TransactionRequestDTO;
 import antifraud.dto.response.FeedbackResponseDTO;
 import antifraud.dto.response.TransactionResponseDTO;
+import antifraud.enums.RoleNames;
 import antifraud.model.Transaction;
 import antifraud.service.TransactionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +14,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +33,12 @@ class TransactionControllerTest {
     @Mock
     private TransactionService transactionService;
 
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private TransactionController transactionController;
 
@@ -38,21 +49,22 @@ class TransactionControllerTest {
     void setUp() {
         validTransactionRequest = createValidTransactionRequest();
         validTransaction = createValidTransaction();
+        authentication = createValidAuthentication();
     }
 
     @Test
     @DisplayName("Should successfully add transaction and return ALLOWED response")
     void shouldAddTransactionSuccessfully() {
         TransactionResponseDTO expectedResponse = new TransactionResponseDTO("ALLOWED", "none");
-        when(transactionService.addTransaction(validTransactionRequest))
+        when(transactionService.addTransaction(validTransactionRequest, authentication))
                 .thenReturn(ResponseEntity.ok(expectedResponse));
 
         ResponseEntity<TransactionResponseDTO> response =
-                transactionController.addTransaction(validTransactionRequest);
+                transactionController.addTransaction(validTransactionRequest, authentication);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedResponse, response.getBody());
-        verify(transactionService).addTransaction(validTransactionRequest);
+        verify(transactionService).addTransaction(validTransactionRequest, authentication);
     }
 
     @Test
@@ -60,15 +72,15 @@ class TransactionControllerTest {
         FeedbackRequestDTO feedbackRequest = createValidFeedbackRequest();
         FeedbackResponseDTO expectedResponse = new FeedbackResponseDTO(validTransaction);
 
-        when(transactionService.addFeedback(feedbackRequest))
+        when(transactionService.addFeedback(feedbackRequest, authentication))
                 .thenReturn(ResponseEntity.ok(expectedResponse));
 
         ResponseEntity<FeedbackResponseDTO> response =
-                transactionController.addFeedback(feedbackRequest);
+                transactionController.addFeedback(feedbackRequest, authentication);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedResponse, response.getBody());
-        verify(transactionService).addFeedback(feedbackRequest);
+        verify(transactionService).addFeedback(feedbackRequest, authentication);
     }
 
     @Test
@@ -126,6 +138,13 @@ class TransactionControllerTest {
         transaction.setDate(LocalDateTime.now());
         transaction.setResult("ALLOWED");
         return transaction;
+    }
+
+    private Authentication createValidAuthentication() {
+        return new UsernamePasswordAuthenticationToken(
+                "testUser",
+                "password",
+                List.of(new SimpleGrantedAuthority(RoleNames.ROLE_MERCHANT.toString())));
     }
 
     private FeedbackRequestDTO createValidFeedbackRequest() {

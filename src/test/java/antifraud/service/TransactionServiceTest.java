@@ -5,6 +5,7 @@ import antifraud.dto.request.FeedbackRequestDTO;
 import antifraud.dto.request.TransactionRequestDTO;
 import antifraud.dto.response.FeedbackResponseDTO;
 import antifraud.dto.response.TransactionResponseDTO;
+import antifraud.enums.RoleNames;
 import antifraud.enums.TransactionType;
 import antifraud.exception.ConflictException;
 import antifraud.exception.NotFoundException;
@@ -21,7 +22,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +47,12 @@ public class TransactionServiceTest {
     @Mock
     private StolenCardRepo stolenCardRepo;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private Authentication authentication;
+
     @InjectMocks
     private TransactionService transactionService;
 
@@ -52,6 +63,7 @@ public class TransactionServiceTest {
     @BeforeEach
     void setUp() {
         initTestData();
+        authentication = createValidAuthentication();
     }
 
     private void initTestData() {
@@ -79,7 +91,7 @@ public class TransactionServiceTest {
     void shouldSuccessfullyAddTransaction() {
         when(transactionRepo.save(any(Transaction.class))).thenReturn(transaction);
 
-        ResponseEntity<TransactionResponseDTO> response = transactionService.addTransaction(transactionDTO);
+        ResponseEntity<TransactionResponseDTO> response = transactionService.addTransaction(transactionDTO, authentication);
 
         assertNotNull(response, "Response should not be null.");
         assertEquals(TransactionType.ALLOWED.toString(), response.getBody().getResult(), "Transaction result should be ALLOWED.");
@@ -91,7 +103,7 @@ public class TransactionServiceTest {
     void shouldThrowNotFoundExceptionWhenAddingFeedbackToNonExistentTransaction() {
         when(transactionRepo.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> transactionService.addFeedback(feedbackDTO),
+        assertThrows(NotFoundException.class, () -> transactionService.addFeedback(feedbackDTO, authentication),
                 "Expected NotFoundException when transaction is not found.");
         verify(transactionRepo, times(1)).findById(1L);
     }
@@ -102,7 +114,7 @@ public class TransactionServiceTest {
         transaction.setFeedback("APPROVED");
         when(transactionRepo.findById(1L)).thenReturn(Optional.of(transaction));
 
-        assertThrows(ConflictException.class, () -> transactionService.addFeedback(feedbackDTO),
+        assertThrows(ConflictException.class, () -> transactionService.addFeedback(feedbackDTO, authentication),
                 "Expected ConflictException when feedback is already set on the transaction.");
         verify(transactionRepo, times(1)).findById(1L);
         verify(transactionRepo, times(0)).save(any(Transaction.class));
@@ -114,7 +126,7 @@ public class TransactionServiceTest {
         transaction.setResult("APPROVED");
         when(transactionRepo.findById(1L)).thenReturn(Optional.of(transaction));
 
-        UnprocessableEntityException exception = assertThrows(UnprocessableEntityException.class, () -> transactionService.addFeedback(feedbackDTO));
+        UnprocessableEntityException exception = assertThrows(UnprocessableEntityException.class, () -> transactionService.addFeedback(feedbackDTO, authentication));
         assertEquals("Result and feedback cannot be the same", exception.getMessage(), "Expected exception message did not match.");
         verify(transactionRepo, times(1)).findById(1L);
         verify(transactionRepo, times(0)).save(any(Transaction.class));
@@ -250,10 +262,17 @@ public class TransactionServiceTest {
         feedbackRequest.setTransactionId(1L);
         feedbackRequest.setFeedback(TransactionType.ALLOWED.toString());
 
-        ResponseEntity<FeedbackResponseDTO> response = transactionService.addFeedback(feedbackRequest);
+        ResponseEntity<FeedbackResponseDTO> response = transactionService.addFeedback(feedbackRequest, authentication);
 
         assertNotNull(response, "Response should not be null.");
         assertEquals(TransactionType.ALLOWED.toString(), response.getBody().getFeedback(), "Feedback should be updated correctly.");
         verify(transactionRepo, times(1)).save(transaction);
+    }
+
+    private Authentication createValidAuthentication() {
+        return new UsernamePasswordAuthenticationToken(
+                "testUser",
+                "password",
+                List.of(new SimpleGrantedAuthority(RoleNames.ROLE_MERCHANT.toString())));
     }
 }
