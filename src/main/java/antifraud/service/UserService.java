@@ -16,7 +16,7 @@ import antifraud.repo.RoleRepo;
 import antifraud.logging.events.user.UserRoleChangedEvent;
 import antifraud.logging.events.user.UserDeletedEvent;
 import antifraud.logging.events.user.UserRegisteredEvent;
-import antifraud.logging.events.user.UserStatusChangedEvent;
+import antifraud.logging.events.user.UserLockedStatusChangeEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -127,7 +127,7 @@ public class UserService {
 
         user.setLocked(newLockedStatus);
         appUserRepo.save(user);
-        eventPublisher.publishEvent(new UserStatusChangedEvent(user, newLockedStatus));
+        eventPublisher.publishEvent(new UserLockedStatusChangeEvent(user.getUsername(), newLockedStatus));
 
         return ResponseEntity.ok(OperationResponseDTO.ofLockStatus(user));
     }

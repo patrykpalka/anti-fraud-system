@@ -1,4 +1,4 @@
-package antifraud.logging;
+package antifraud.logging.listener;
 
 import antifraud.logging.events.transaction.FeedbackAddedEvent;
 import antifraud.logging.events.transaction.FraudulentTransactionDetectedEvent;

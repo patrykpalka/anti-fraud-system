@@ -1,4 +1,4 @@
-package antifraud.logging;
+package antifraud.logging.listener;
 
 import antifraud.logging.events.antifraud.StolenCardAddedEvent;
 import antifraud.logging.events.antifraud.StolenCardRemoveEvent;

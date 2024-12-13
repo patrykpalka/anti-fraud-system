@@ -1,9 +1,9 @@
-package antifraud.logging;
+package antifraud.logging.listener;
 
 import antifraud.logging.events.user.UserDeletedEvent;
 import antifraud.logging.events.user.UserRegisteredEvent;
 import antifraud.logging.events.user.UserRoleChangedEvent;
-import antifraud.logging.events.user.UserStatusChangedEvent;
+import antifraud.logging.events.user.UserLockedStatusChangeEvent;
 import antifraud.model.AppUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +36,9 @@ public class UserEventListener {
 
     @EventListener
     @Async
-    public void logUserStatusChangedEvent(UserStatusChangedEvent event) {
+    public void logUserStatusChangedEvent(UserLockedStatusChangeEvent event) {
         String status = event.locked() ? "locked" : "unlocked";
-        LOGGER.info("User status changed: Username: {}, Status: {}", event.appUser().getUsername(), status);
+        LOGGER.info("User status changed: Username: {}, Status: {}", event.username(), status);
     }
 
     private void logUserAction(String action, AppUser user, String oldRole, String newRole) {
