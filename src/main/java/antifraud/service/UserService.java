@@ -13,7 +13,10 @@ import antifraud.model.AppUser;
 import antifraud.model.Role;
 import antifraud.repo.AppUserRepo;
 import antifraud.repo.RoleRepo;
-import logging.events.UserRegisteredEvent;
+import logging.events.user.UserRoleChangedEvent;
+import logging.events.user.UserDeletedEvent;
+import logging.events.user.UserRegisteredEvent;
+import logging.events.user.UserStatusChangedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -65,6 +68,7 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         appUserRepo.delete(user);
+        eventPublisher.publishEvent(new UserDeletedEvent(user));
 
         return ResponseEntity.ok(UserDeletionResponseDTO.ofDeletion(username));
     }
@@ -86,6 +90,7 @@ public class UserService {
         }
 
         updateAndSaveRequestedRole(user, requestedRoleName);
+        eventPublisher.publishEvent(new UserRoleChangedEvent(user, currentRoleName, requestedRoleName));
 
         return ResponseEntity.ok(new UserResponseDTO(user));
     }
@@ -122,6 +127,7 @@ public class UserService {
 
         user.setLocked(newLockedStatus);
         appUserRepo.save(user);
+        eventPublisher.publishEvent(new UserStatusChangedEvent(user, newLockedStatus));
 
         return ResponseEntity.ok(OperationResponseDTO.ofLockStatus(user));
     }

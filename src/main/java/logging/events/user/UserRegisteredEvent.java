@@ -1,4 +1,4 @@
-package logging.events;
+package logging.events.user;
 
 import antifraud.model.AppUser;
 
