@@ -24,12 +24,12 @@ public class AntiFraudEventListener {
     @EventListener
     @Async
     public void logFraudulentTransactionDetectedEvent(FraudulentTransactionDetectedEvent event) {
-        LOGGER.info("Fraudulent transaction detected: Transaction ID: {}, Reasons: {}", event.transactionId(), event.reasons());
+        LOGGER.error("Fraudulent transaction detected: Transaction ID: {}, Reasons: {}", event.transactionId(), event.reasons());
     }
 
     @EventListener
     @Async
     public void logFeedbackAddedEvent(FeedbackAddedEvent event) {
-        LOGGER.info("Feedback added by {}: Transaction ID: {}, Feedback: {}", event.reviewer(), event.transactionId(), event.feedback());
+        LOGGER.error("Feedback added by {}: Transaction ID: {}, Feedback: {}", event.reviewer(), event.transactionId(), event.feedback());
     }
 }

@@ -18,33 +18,41 @@ public class TransactionEventListener {
     @EventListener
     @Async
     public void logSuspiciousIpAddedEvent(SuspiciousIpAddedEvent event) {
-        logIpAction("Suspicious IP added", event.ip());
+        logIpAction("Suspicious IP added", event.ip(), "WARN");
     }
 
     @EventListener
     @Async
     public void logSuspiciousIpRemoveEvent(SuspiciousIpRemoveEvent event) {
-        logIpAction("Suspicious IP removed", event.ip());
+        logIpAction("Suspicious IP removed", event.ip(), "INFO");
     }
 
     @EventListener
     @Async
     public void logStolenCardAddedEvent(StolenCardAddedEvent event) {
-        logCardAction("Stolen card added", event.cardNumber());
+        logCardAction("Stolen card added", event.cardNumber(), "WARN");
     }
 
     @EventListener
     @Async
     public void logStolenCardRemoveEvent(StolenCardRemoveEvent event) {
-        logCardAction("Stolen card removed", event.cardNumber());
+        logCardAction("Stolen card removed", event.cardNumber(), "INFO");
     }
 
-    private void logIpAction(String action, String ip) {
-        LOGGER.info("{}: IP: {}", action, maskIp(ip));
+    private void logIpAction(String action, String ip, String logLevel) {
+        if ("WARN".equals(logLevel)) {
+            LOGGER.warn("{}: IP: {}", action, maskIp(ip));
+        } else {
+            LOGGER.info("{}: IP: {}", action, maskIp(ip));
+        }
     }
 
-    private void logCardAction(String action, String cardNumber) {
-        LOGGER.info("{}: Card Number: {}", action, maskCardNumber(cardNumber));
+    private void logCardAction(String action, String cardNumber, String logLevel) {
+        if ("WARN".equals(logLevel)) {
+            LOGGER.warn("{}: Card Number: {}", action, maskCardNumber(cardNumber));
+        } else {
+            LOGGER.info("{}: Card Number: {}", action, maskCardNumber(cardNumber));
+        }
     }
 
     private String maskIp(String ip) {

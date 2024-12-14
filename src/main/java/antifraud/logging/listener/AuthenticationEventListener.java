@@ -23,13 +23,13 @@ public class AuthenticationEventListener {
     @EventListener
     @Async
     public void logFailedLoginEvent(FailedLoginEvent event) {
-        LOGGER.info("Failed login: Username: {}, IP address: {}, Timestamp: {}", event.username(), maskIp(event.ipAddress()), event.timestamp());
+        LOGGER.warn("Failed login: Username: {}, IP address: {}, Timestamp: {}", event.username(), maskIp(event.ipAddress()), event.timestamp());
     }
 
     @EventListener
     @Async
     public void logBruteForceAttemptEvent(BruteForceAttemptEvent event) {
-        LOGGER.info("Brute force attempt: Username: {}, IP address: {}, Timestamp: {}", event.username(), maskIp(event.ipAddress()), event.timestamp());
+        LOGGER.warn("Brute force attempt: Username: {}, IP address: {}, Timestamp: {}", event.username(), maskIp(event.ipAddress()), event.timestamp());
     }
 
     private String maskIp(String ip) {
