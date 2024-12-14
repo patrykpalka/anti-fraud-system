@@ -10,9 +10,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UserAuthenticationListener {
+public class AuthenticationEventListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserAuthenticationListener.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationEventListener.class);
 
     @EventListener
     @Async
