@@ -23,6 +23,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -59,6 +63,7 @@ public class TransactionServiceTest {
     private TransactionRequestDTO transactionDTO;
     private FeedbackRequestDTO feedbackDTO;
     private Transaction transaction;
+    private Pageable pageable;
 
     @BeforeEach
     void setUp() {
@@ -85,6 +90,8 @@ public class TransactionServiceTest {
         transaction.setNumber("1234567890123456");
         transaction.setRegion("EAP");
         transaction.setDate(java.time.LocalDateTime.now());
+
+        pageable =  PageRequest.of(0, 10);
     }
 
     @Test
@@ -133,39 +140,38 @@ public class TransactionServiceTest {
     }
 
     @Test
-    void shouldReturnTransactionHistory() {
-        List<Transaction> transactions = Arrays.asList(new Transaction(), new Transaction());
-        when(transactionRepo.findAllByOrderByIdAsc()).thenReturn(transactions);
+    void shouldReturnPaginatedTransactionHistory() {
+        List<Transaction> transactions = Arrays.asList(
+                createTransaction(1L, "1234567890123456", 100),
+                createTransaction(2L, "1234567890123456", 200)
+        );
 
-        ResponseEntity<?> response = transactionService.getHistory();
+        Page<Transaction> page = new PageImpl<>(transactions, pageable, transactions.size());
+        when(transactionRepo.findAllByOrderByIdAsc(pageable)).thenReturn(page);
+
+        ResponseEntity<?> response = transactionService.getHistory(pageable);
 
         assertNotNull(response, "Response should not be null.");
         assertEquals(2, ((List<?>) response.getBody()).size(), "The transaction history size should match.");
-        verify(transactionRepo, times(1)).findAllByOrderByIdAsc();
+        verify(transactionRepo, times(1)).findAllByOrderByIdAsc(pageable);
     }
 
     @Test
-    @DisplayName("Should throw NotFoundException when no transactions are found for a card number")
-    void shouldThrowNotFoundExceptionWhenNoTransactionsFoundForCardNumber() {
+    void shouldReturnPaginatedTransactionHistoryByCardNumber() {
         String cardNumber = "1234567890123456";
-        when(transactionRepo.findAllByNumberOrderByIdAsc(cardNumber)).thenReturn(Arrays.asList());
+        List<Transaction> transactions = Arrays.asList(
+                createTransaction(1L, cardNumber, 100),
+                createTransaction(2L, cardNumber, 200)
+        );
 
-        assertThrows(NotFoundException.class, () -> transactionService.getHistoryByNumber(cardNumber),
-                "Expected NotFoundException when no transactions are found for the given card number.");
-        verify(transactionRepo, times(1)).findAllByNumberOrderByIdAsc(cardNumber);
-    }
+        Page<Transaction> page = new PageImpl<>(transactions, pageable, transactions.size());
+        when(transactionRepo.findAllByNumberOrderByIdAsc(cardNumber, pageable)).thenReturn(page);
 
-    @Test
-    void shouldReturnTransactionHistoryForCardNumber() {
-        String cardNumber = "1234567890123456";
-        List<Transaction> transactions = Arrays.asList(new Transaction(), new Transaction());
-        when(transactionRepo.findAllByNumberOrderByIdAsc(cardNumber)).thenReturn(transactions);
-
-        ResponseEntity<List<FeedbackResponseDTO>> response = transactionService.getHistoryByNumber(cardNumber);
+        ResponseEntity<List<FeedbackResponseDTO>> response = transactionService.getHistoryByNumber(cardNumber, pageable);
 
         assertNotNull(response, "Response should not be null.");
         assertEquals(2, response.getBody().size(), "The transaction history size should match.");
-        verify(transactionRepo, times(1)).findAllByNumberOrderByIdAsc(cardNumber);
+        verify(transactionRepo, times(1)).findAllByNumberOrderByIdAsc(cardNumber, pageable);
     }
 
     @Test
@@ -274,5 +280,17 @@ public class TransactionServiceTest {
                 "testUser",
                 "password",
                 List.of(new SimpleGrantedAuthority(RoleNames.ROLE_MERCHANT.toString())));
+    }
+
+    private Transaction createTransaction(Long id, String cardNumber, int amount) {
+        Transaction transaction = new Transaction();
+        transaction.setId(id);
+        transaction.setAmount(amount);
+        transaction.setIp("123.45.67.89");
+        transaction.setNumber(cardNumber);
+        transaction.setRegion("EAP");
+        transaction.setDate(java.time.LocalDateTime.now());
+        transaction.setResult("ALLOWED");
+        return transaction;
     }
 }

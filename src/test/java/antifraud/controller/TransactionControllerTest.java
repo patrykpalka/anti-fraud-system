@@ -15,6 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -64,7 +66,7 @@ class TransactionControllerTest {
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedResponse, response.getBody());
-        verify(transactionService).addTransaction(validTransactionRequest, authentication);
+        verify(transactionService, times(1)).addTransaction(validTransactionRequest, authentication);
     }
 
     @Test
@@ -80,7 +82,7 @@ class TransactionControllerTest {
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedResponse, response.getBody());
-        verify(transactionService).addFeedback(feedbackRequest, authentication);
+        verify(transactionService, times(1)).addFeedback(feedbackRequest, authentication);
     }
 
     @Test
@@ -89,15 +91,16 @@ class TransactionControllerTest {
         List<FeedbackResponseDTO> expectedHistory = transactions.stream()
                 .map(FeedbackResponseDTO::new)
                 .collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(0, 10);
 
-        when(transactionService.getHistory())
+        when(transactionService.getHistory(pageable))
                 .thenReturn(ResponseEntity.ok(expectedHistory));
 
-        ResponseEntity<?> response = transactionController.getHistory();
+        ResponseEntity<?> response = transactionController.getHistory(pageable);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedHistory, response.getBody());
-        verify(transactionService).getHistory();
+        verify(transactionService, times(1)).getHistory(pageable);
     }
 
     @Test
@@ -105,16 +108,17 @@ class TransactionControllerTest {
         String cardNumber = "4000000000000002";
         FeedbackResponseDTO feedbackResponse = new FeedbackResponseDTO(validTransaction);
         List<FeedbackResponseDTO> expectedHistory = List.of(feedbackResponse);
+        Pageable pageable = PageRequest.of(0, 10);
 
-        when(transactionService.getHistoryByNumber(cardNumber))
+        when(transactionService.getHistoryByNumber(cardNumber, pageable))
                 .thenReturn(ResponseEntity.ok(expectedHistory));
 
         ResponseEntity<List<FeedbackResponseDTO>> response =
-                transactionController.getHistoryByNumber(cardNumber);
+                transactionController.getHistoryByNumber(cardNumber, pageable);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expectedHistory, response.getBody());
-        verify(transactionService).getHistoryByNumber(cardNumber);
+        verify(transactionService, times(1)).getHistoryByNumber(cardNumber, pageable);
     }
 
     // Helper methods for creating test data
