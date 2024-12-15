@@ -7,6 +7,7 @@ import antifraud.dto.response.TransactionResponseDTO;
 import antifraud.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +32,12 @@ public class TransactionController {
     }
 
     @GetMapping("/api/antifraud/history")
-    public ResponseEntity<List<FeedbackResponseDTO>> getHistory() {
-        return transactionService.getHistory();
+    public ResponseEntity<List<FeedbackResponseDTO>> getHistory(Pageable pageable) {
+        return transactionService.getHistory(pageable);
     }
 
     @GetMapping("/api/antifraud/history/{number}")
-    public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(@PathVariable("number") String number) {
-        return transactionService.getHistoryByNumber(number);
+    public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(@PathVariable("number") String number, Pageable pageable) {
+        return transactionService.getHistoryByNumber(number, pageable);
     }
 }

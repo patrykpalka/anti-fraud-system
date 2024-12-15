@@ -19,6 +19,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -97,8 +99,8 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<List<FeedbackResponseDTO>> getHistory() {
-        List<Transaction> transactions = transactionRepo.findAllByOrderByIdAsc();
+    public ResponseEntity<List<FeedbackResponseDTO>> getHistory(Pageable pageable) {
+        Page<Transaction> transactions = transactionRepo.findAllByOrderByIdAsc(pageable);
 
         return ResponseEntity.ok(transactions.isEmpty() ? Collections.emptyList() : transactions.stream()
                 .map(FeedbackResponseDTO::new)
@@ -106,8 +108,8 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(@Valid @ValidCardNumber String number) {
-        List<Transaction> transactions = transactionRepo.findAllByNumberOrderByIdAsc(number);
+    public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(@Valid @ValidCardNumber String number, Pageable pageable) {
+        Page<Transaction> transactions = transactionRepo.findAllByNumberOrderByIdAsc(number, pageable);
 
         if (transactions.isEmpty()) {
             throw new NotFoundException("Transaction not found");
