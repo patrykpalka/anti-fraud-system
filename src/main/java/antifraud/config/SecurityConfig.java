@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final AuthorizationRuleConfigurer authorizationRuleConfigurer;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationFilter customAuthenticationFilter) throws Exception {
@@ -46,9 +47,12 @@ public class SecurityConfig {
 
     @Bean
     public CustomAuthenticationFilter customAuthenticationFilter(AuthenticationManager authenticationManager,
-            CustomAuthenticationSuccessHandler successHandler, CustomAuthenticationFailureHandler failureHandler) {
+                                                                 JwtTokenProvider jwtTokenProvider,
+                                                                 CustomAuthenticationSuccessHandler successHandler,
+                                                                 CustomAuthenticationFailureHandler failureHandler) {
         return new CustomAuthenticationFilter(
                 authenticationManager,
+                jwtTokenProvider,
                 successHandler,
                 failureHandler
         );

@@ -1,11 +1,13 @@
 package antifraud.service;
 
 import antifraud.dto.request.FeedbackRequestDTO;
-import antifraud.dto.response.FeedbackResponseDTO;
 import antifraud.dto.request.TransactionRequestDTO;
+import antifraud.dto.response.FeedbackResponseDTO;
 import antifraud.dto.response.TransactionResponseDTO;
 import antifraud.enums.TransactionType;
-import antifraud.exception.*;
+import antifraud.exception.ConflictException;
+import antifraud.exception.NotFoundException;
+import antifraud.exception.UnprocessableEntityException;
 import antifraud.logging.events.transaction.FeedbackAddedEvent;
 import antifraud.logging.events.transaction.FraudulentTransactionDetectedEvent;
 import antifraud.logging.events.transaction.TransactionCreatedEvent;
@@ -17,7 +19,6 @@ import antifraud.validation.annotation.ValidCardNumber;
 import antifraud.validation.transaction.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +27,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static antifraud.service.utils.ConstantsUtil.updateTransactionLimit;
