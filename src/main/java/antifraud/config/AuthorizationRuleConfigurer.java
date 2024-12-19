@@ -20,6 +20,7 @@ public class AuthorizationRuleConfigurer {
 
     private void configurePublicEndpoints(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
         auth.requestMatchers(HttpMethod.POST, "/api/auth/user").permitAll();
+        auth.requestMatchers("/actuator/health").permitAll();
         auth.requestMatchers("/actuator/shutdown").permitAll();
     }
 
@@ -27,6 +28,8 @@ public class AuthorizationRuleConfigurer {
         auth.requestMatchers(HttpMethod.DELETE, "/api/auth/user/**").hasRole(RoleNames.ADMINISTRATOR.name());
         auth.requestMatchers(HttpMethod.PUT, "/api/auth/access").hasRole(RoleNames.ADMINISTRATOR.name());
         auth.requestMatchers(HttpMethod.PUT, "/api/auth/role").hasRole(RoleNames.ADMINISTRATOR.name());
+        auth.requestMatchers("/actuator/info").hasRole(RoleNames.ADMINISTRATOR.name());
+        auth.requestMatchers("/actuator/metrics").hasRole(RoleNames.ADMINISTRATOR.name());
     }
 
     private void configureMerchantEndpoints(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {

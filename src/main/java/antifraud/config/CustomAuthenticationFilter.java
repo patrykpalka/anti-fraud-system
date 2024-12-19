@@ -1,5 +1,6 @@
 package antifraud.config;
 
+import antifraud.config.jwt.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,4 +1,4 @@
-package antifraud.config;
+package antifraud.config.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

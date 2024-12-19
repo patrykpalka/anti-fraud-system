@@ -1,4 +1,4 @@
-package antifraud.config;
+package antifraud.config.jwt;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
