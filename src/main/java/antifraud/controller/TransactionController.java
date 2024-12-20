@@ -7,6 +7,11 @@ import antifraud.dto.response.TransactionResponseDTO;
 import antifraud.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,39 +24,64 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Transaction APIs", description = "APIs for managing transactions and feedback.")
+@Tag(name = "TransactionController", description = "APIs for managing transactions and transaction feedback.")
 public class TransactionController {
 
     private final TransactionService transactionService;
 
     @PostMapping("/api/antifraud/transaction")
-    @Operation(summary = "Submit Transaction", description = "Analyzes a transaction for fraud detection.")
+    @Operation(summary = "Submit Transaction", description = "Analyzes a transaction for fraud detection and returns the result with potential fraud indicators.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Transaction analyzed successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TransactionResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid transaction details"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
+    })
     public ResponseEntity<TransactionResponseDTO> addTransaction(
-            @Valid @RequestBody @Parameter(description = "Transaction details") TransactionRequestDTO transaction,
-            Authentication authentication) {
+            @Valid @RequestBody @Parameter(description = "Transaction details to analyze", required = true) TransactionRequestDTO transaction,
+            @Parameter(hidden = true) Authentication authentication) {
         return transactionService.addTransaction(transaction, authentication);
     }
 
     @PutMapping("/api/antifraud/transaction")
-    @Operation(summary = "Add Feedback", description = "Adds feedback to a transaction.")
+    @Operation(summary = "Add Transaction Feedback", description = "Adds feedback to a processed transaction for system learning.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Feedback added successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = FeedbackResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid feedback details"),
+            @ApiResponse(responseCode = "404", description = "Transaction not found"),
+            @ApiResponse(responseCode = "409", description = "Feedback already exists"),
+            @ApiResponse(responseCode = "422", description = "Feedback matches transaction result")
+    })
     public ResponseEntity<FeedbackResponseDTO> addFeedback(
-            @Valid @RequestBody @Parameter(description = "Feedback details") FeedbackRequestDTO feedback,
-            Authentication authentication) {
+            @Valid @RequestBody @Parameter(description = "Feedback details for the transaction", required = true) FeedbackRequestDTO feedback,
+            @Parameter(hidden = true) Authentication authentication) {
         return transactionService.addFeedback(feedback, authentication);
     }
 
     @GetMapping("/api/antifraud/history")
-    @Operation(summary = "Transaction History", description = "Fetches transaction feedback history.")
+    @Operation(summary = "Get Transaction History", description = "Retrieves paginated transaction history with feedback.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Transaction history retrieved successfully",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FeedbackResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
+    })
     public ResponseEntity<List<FeedbackResponseDTO>> getHistory(
-            @Parameter(description = "Pagination details") Pageable pageable) {
+            @Parameter(description = "Pagination parameters") Pageable pageable) {
         return transactionService.getHistory(pageable);
     }
 
     @GetMapping("/api/antifraud/history/{number}")
-    @Operation(summary = "History by Card Number", description = "Fetches transaction history by card number.")
+    @Operation(summary = "Get Card Transaction History", description = "Retrieves paginated transaction history for a specific card number.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Card transaction history retrieved successfully",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FeedbackResponseDTO.class)))),
+            @ApiResponse(responseCode = "400", description = "Invalid card number format"),
+            @ApiResponse(responseCode = "404", description = "No transactions found for the card number")
+    })
     public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(
-            @PathVariable("number") @Parameter(description = "Card number for filtering history") String number,
-            Pageable pageable) {
+            @PathVariable @Parameter(description = "Card number to get history for", required = true, example = "4000008449433403") String number,
+            @Parameter(description = "Pagination parameters") Pageable pageable) {
         return transactionService.getHistoryByNumber(number, pageable);
     }
 }
