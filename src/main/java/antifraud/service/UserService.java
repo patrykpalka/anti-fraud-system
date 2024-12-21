@@ -18,6 +18,8 @@ import antifraud.logging.events.user.UserDeletedEvent;
 import antifraud.logging.events.user.UserRegisteredEvent;
 import antifraud.logging.events.user.UserLockedStatusChangeEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +44,7 @@ public class UserService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
+    @CacheEvict(value = "users", key = "#registration.username", condition = "#existingUser == null")
     public ResponseEntity<UserResponseDTO> registerUser(UserRegistrationRequestDTO registration) {
         if (appUserRepo.findByUsername(registration.getUsername()).isPresent()) {
             throw new ConflictException("Username already exists");
@@ -54,6 +57,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable("users")
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<UserResponseDTO> users = appUserRepo.findAllByOrderByIdAsc().stream()
                 .map(UserResponseDTO::new)
@@ -63,6 +67,7 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", key = "#username")
     public ResponseEntity<UserDeletionResponseDTO> deleteUser(String username) {
         AppUser user = appUserRepo.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User not found"));
