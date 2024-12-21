@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static antifraud.service.utils.ValidationUtil.isUserAnAdministrator;
-import static antifraud.service.utils.ValidationUtil.isValidUserRoleChange;
+import static antifraud.utils.ValidationUtil.isUserAnAdministrator;
+import static antifraud.utils.ValidationUtil.isValidUserRoleChange;
 
 @Service
 @RequiredArgsConstructor

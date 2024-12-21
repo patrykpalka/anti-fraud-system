@@ -14,7 +14,7 @@ import antifraud.model.Transaction;
 import antifraud.repo.StolenCardRepo;
 import antifraud.repo.SuspiciousIpRepo;
 import antifraud.repo.TransactionRepo;
-import antifraud.service.utils.ConstantsUtil;
+import antifraud.utils.ConstantsUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

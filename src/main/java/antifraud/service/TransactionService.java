@@ -32,7 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static antifraud.service.utils.ConstantsUtil.updateTransactionLimit;
+import static antifraud.utils.ConstantsUtil.updateTransactionLimit;
 
 @Service
 @RequiredArgsConstructor

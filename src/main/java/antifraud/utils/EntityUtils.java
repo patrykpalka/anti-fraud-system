@@ -1,4 +1,4 @@
-package antifraud.service.utils;
+package antifraud.utils;
 
 import antifraud.dto.request.StolenCardRequestDTO;
 import antifraud.dto.request.SuspiciousIpRequestDTO;

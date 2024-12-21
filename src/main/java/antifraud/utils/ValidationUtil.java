@@ -1,4 +1,4 @@
-package antifraud.service.utils;
+package antifraud.utils;
 
 import antifraud.enums.RoleNames;
 import antifraud.model.AppUser;

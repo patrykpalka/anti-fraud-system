@@ -5,7 +5,7 @@ import antifraud.dto.response.AntiFraudDeletionResponseDTO;
 import antifraud.exception.ConflictException;
 import antifraud.exception.NotFoundException;
 import antifraud.model.SuspiciousIp;
-import antifraud.service.utils.EntityUtils;
+import antifraud.utils.EntityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static antifraud.service.utils.EntityUtils.*;
+import static antifraud.utils.EntityUtils.*;
 
 @Service
 @RequiredArgsConstructor
