@@ -28,7 +28,7 @@ public class UserEventListener {
         try {
             logUserAction("New user registered", event.appUser(), null, null);
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.USER, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing UserRegisteredEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
@@ -42,7 +42,7 @@ public class UserEventListener {
         try {
             logUserAction("User deleted", event.appUser(), null, null);
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.USER, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing UserDeletedEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
@@ -56,7 +56,7 @@ public class UserEventListener {
         try {
             logUserAction("Role changed", event.appUser(), event.oldRole(), event.newRole());
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.USER, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing UserRoleChangedEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
@@ -71,7 +71,7 @@ public class UserEventListener {
             String status = event.locked() ? "locked" : "unlocked";
             LOGGER.info("User status changed: Username: {}, Status: {}", event.username(), status);
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.USER, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing UserLockedStatusChangeEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {

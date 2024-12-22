@@ -27,7 +27,7 @@ public class AntiFraudEventListener {
         try {
             logIpAction("Suspicious IP added", event.ip(), "WARN");
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing SuspiciousIpAddedEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
@@ -41,7 +41,7 @@ public class AntiFraudEventListener {
         try {
             logIpAction("Suspicious IP removed", event.ip(), "INFO");
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing SuspiciousIpRemoveEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
@@ -55,7 +55,7 @@ public class AntiFraudEventListener {
         try {
             logCardAction("Stolen card added", event.cardNumber(), "WARN");
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing StolenCardAddedEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
@@ -69,7 +69,7 @@ public class AntiFraudEventListener {
         try {
             logCardAction("Stolen card removed", event.cardNumber(), "INFO");
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing StolenCardRemoveEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {

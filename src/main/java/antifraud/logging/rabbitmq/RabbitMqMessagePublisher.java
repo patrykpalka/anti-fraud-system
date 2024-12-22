@@ -21,15 +21,15 @@ public class RabbitMqMessagePublisher {
     private final Queue authenticationQueue;
     private final Queue antiFraudQueue;
     private final Queue userQueue;
-    private Map<String, Queue> eventQueueMap;
+    private Map<EventNames, Queue> eventQueueMap;
 
     @PostConstruct
     public void init() {
         eventQueueMap = Map.of(
-                EventNames.TRANSACTION.toString(), transactionQueue,
-                EventNames.AUTHENTICATION.toString(), authenticationQueue,
-                EventNames.ANTIFRAUD.toString(), antiFraudQueue,
-                EventNames.USER.toString(), userQueue
+                EventNames.TRANSACTION, transactionQueue,
+                EventNames.AUTHENTICATION, authenticationQueue,
+                EventNames.ANTIFRAUD, antiFraudQueue,
+                EventNames.USER, userQueue
         );
     }
 
@@ -39,7 +39,7 @@ public class RabbitMqMessagePublisher {
             maxAttempts = 5,
             backoff = @Backoff(delay = 2000) // Retry after 2 seconds
     )
-    public void sendEvent(String eventType, Object event) {
+    public void sendEvent(EventNames eventType, Object event) {
         Queue queue = eventQueueMap.get(eventType);
 
         if (queue == null) {

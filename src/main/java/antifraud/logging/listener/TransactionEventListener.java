@@ -27,7 +27,7 @@ public class TransactionEventListener {
             LOGGER.info("Transaction created by {}: Transaction ID: {}, Amount: {}, Result: {}",
                     event.reviewer(), event.transactionId(), event.amount(), event.result());
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing TransactionCreatedEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
@@ -41,7 +41,7 @@ public class TransactionEventListener {
         try {
             LOGGER.error("Fraudulent transaction detected: Transaction ID: {}, Reasons: {}", event.transactionId(), event.reasons());
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing FraudulentTransactionDetectedEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
@@ -55,7 +55,7 @@ public class TransactionEventListener {
         try {
             LOGGER.error("Feedback added by {}: Transaction ID: {}, Feedback: {}", event.reviewer(), event.transactionId(), event.feedback());
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing FeedbackAddedEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {

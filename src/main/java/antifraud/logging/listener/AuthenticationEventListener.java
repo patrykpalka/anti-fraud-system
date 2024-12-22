@@ -26,7 +26,7 @@ public class AuthenticationEventListener {
         try {
             LOGGER.info("Successful login: Username: {}, IP address: {}, Timestamp: {}", event.username(), maskIp(event.ipAddress()), event.timestamp());
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.AUTHENTICATION.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.AUTHENTICATION, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing SuccessfulLoginEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
@@ -40,7 +40,7 @@ public class AuthenticationEventListener {
         try {
             LOGGER.warn("Failed login: Username: {}, IP address: {}, Timestamp: {}", event.username(), maskIp(event.ipAddress()), event.timestamp());
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.AUTHENTICATION.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.AUTHENTICATION, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing FailedLoginEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
@@ -54,7 +54,7 @@ public class AuthenticationEventListener {
         try {
             LOGGER.warn("Brute force attempt: Username: {}, IP address: {}, Timestamp: {}", event.username(), maskIp(event.ipAddress()), event.timestamp());
 
-            rabbitMqMessagePublisher.sendEvent(EventNames.AUTHENTICATION.toString(), event);
+            rabbitMqMessagePublisher.sendEvent(EventNames.AUTHENTICATION, event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing BruteForceAttemptEvent: {}", ex.getMessage(), ex);
         } catch (Exception ex) {
