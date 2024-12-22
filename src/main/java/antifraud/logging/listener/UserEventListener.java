@@ -31,6 +31,8 @@ public class UserEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing UserRegisteredEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
@@ -43,6 +45,8 @@ public class UserEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing UserDeletedEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
@@ -55,6 +59,8 @@ public class UserEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing UserRoleChangedEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
@@ -68,6 +74,8 @@ public class UserEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing UserLockedStatusChangeEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 

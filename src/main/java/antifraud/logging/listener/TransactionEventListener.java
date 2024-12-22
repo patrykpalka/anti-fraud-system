@@ -30,6 +30,8 @@ public class TransactionEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing TransactionCreatedEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
@@ -42,6 +44,8 @@ public class TransactionEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing FraudulentTransactionDetectedEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
@@ -54,6 +58,8 @@ public class TransactionEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing FeedbackAddedEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 }

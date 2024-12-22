@@ -30,6 +30,8 @@ public class AntiFraudEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing SuspiciousIpAddedEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
@@ -42,6 +44,8 @@ public class AntiFraudEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing SuspiciousIpRemoveEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
@@ -54,6 +58,8 @@ public class AntiFraudEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing StolenCardAddedEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
@@ -66,6 +72,8 @@ public class AntiFraudEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.ANTIFRAUD.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing StolenCardRemoveEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 

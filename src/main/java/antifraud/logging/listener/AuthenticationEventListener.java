@@ -29,6 +29,8 @@ public class AuthenticationEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.AUTHENTICATION.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing SuccessfulLoginEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
@@ -41,6 +43,8 @@ public class AuthenticationEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.AUTHENTICATION.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing FailedLoginEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
@@ -53,6 +57,8 @@ public class AuthenticationEventListener {
             rabbitMqMessagePublisher.sendEvent(EventNames.AUTHENTICATION.toString(), event);
         } catch (AmqpException ex) {
             LOGGER.error("Error publishing BruteForceAttemptEvent: {}", ex.getMessage(), ex);
+        } catch (Exception ex) {
+            LOGGER.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         }
     }
 
