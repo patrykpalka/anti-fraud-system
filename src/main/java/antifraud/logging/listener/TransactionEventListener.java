@@ -1,65 +1,59 @@
 package antifraud.logging.listener;
 
-import antifraud.logging.events.antifraud.StolenCardAddedEvent;
-import antifraud.logging.events.antifraud.StolenCardRemoveEvent;
-import antifraud.logging.events.antifraud.SuspiciousIpAddedEvent;
-import antifraud.logging.events.antifraud.SuspiciousIpRemoveEvent;
+import antifraud.enums.EventNames;
+import antifraud.logging.events.transaction.FeedbackAddedEvent;
+import antifraud.logging.events.transaction.FraudulentTransactionDetectedEvent;
+import antifraud.logging.events.transaction.TransactionCreatedEvent;
+import antifraud.logging.rabbitmq.RabbitMqMessagePublisher;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class TransactionEventListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TransactionEventListener.class);
+    private final RabbitMqMessagePublisher rabbitMqMessagePublisher;
 
     @EventListener
     @Async
-    public void logSuspiciousIpAddedEvent(SuspiciousIpAddedEvent event) {
-        logIpAction("Suspicious IP added", event.ip(), "WARN");
-    }
+    public void logTransactionCreatedEvent(TransactionCreatedEvent event) {
+        try {
+            LOGGER.info("Transaction created by {}: Transaction ID: {}, Amount: {}, Result: {}",
+                    event.reviewer(), event.transactionId(), event.amount(), event.result());
 
-    @EventListener
-    @Async
-    public void logSuspiciousIpRemoveEvent(SuspiciousIpRemoveEvent event) {
-        logIpAction("Suspicious IP removed", event.ip(), "INFO");
-    }
-
-    @EventListener
-    @Async
-    public void logStolenCardAddedEvent(StolenCardAddedEvent event) {
-        logCardAction("Stolen card added", event.cardNumber(), "WARN");
-    }
-
-    @EventListener
-    @Async
-    public void logStolenCardRemoveEvent(StolenCardRemoveEvent event) {
-        logCardAction("Stolen card removed", event.cardNumber(), "INFO");
-    }
-
-    private void logIpAction(String action, String ip, String logLevel) {
-        if ("WARN".equals(logLevel)) {
-            LOGGER.warn("{}: IP: {}", action, maskIp(ip));
-        } else {
-            LOGGER.info("{}: IP: {}", action, maskIp(ip));
+            rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION.toString(), event);
+        } catch (AmqpException ex) {
+            LOGGER.error("Error publishing TransactionCreatedEvent: {}", ex.getMessage(), ex);
         }
     }
 
-    private void logCardAction(String action, String cardNumber, String logLevel) {
-        if ("WARN".equals(logLevel)) {
-            LOGGER.warn("{}: Card Number: {}", action, maskCardNumber(cardNumber));
-        } else {
-            LOGGER.info("{}: Card Number: {}", action, maskCardNumber(cardNumber));
+    @EventListener
+    @Async
+    public void logFraudulentTransactionDetectedEvent(FraudulentTransactionDetectedEvent event) {
+        try {
+            LOGGER.error("Fraudulent transaction detected: Transaction ID: {}, Reasons: {}", event.transactionId(), event.reasons());
+
+            rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION.toString(), event);
+        } catch (AmqpException ex) {
+            LOGGER.error("Error publishing FraudulentTransactionDetectedEvent: {}", ex.getMessage(), ex);
         }
     }
 
-    private String maskIp(String ip) {
-        return ip.replaceAll("(\\d+\\.\\d+\\.\\d+\\.)\\d+", "$1***");
-    }
+    @EventListener
+    @Async
+    public void logFeedbackAddedEvent(FeedbackAddedEvent event) {
+        try {
+            LOGGER.error("Feedback added by {}: Transaction ID: {}, Feedback: {}", event.reviewer(), event.transactionId(), event.feedback());
 
-    private String maskCardNumber(String cardNumber) {
-        return cardNumber.replaceAll("\\d(?=\\d{4})", "*");
+            rabbitMqMessagePublisher.sendEvent(EventNames.TRANSACTION.toString(), event);
+        } catch (AmqpException ex) {
+            LOGGER.error("Error publishing FeedbackAddedEvent: {}", ex.getMessage(), ex);
+        }
     }
 }

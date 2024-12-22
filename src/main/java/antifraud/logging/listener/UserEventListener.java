@@ -1,44 +1,74 @@
 package antifraud.logging.listener;
 
+import antifraud.enums.EventNames;
 import antifraud.logging.events.user.UserDeletedEvent;
 import antifraud.logging.events.user.UserRegisteredEvent;
 import antifraud.logging.events.user.UserRoleChangedEvent;
 import antifraud.logging.events.user.UserLockedStatusChangeEvent;
+import antifraud.logging.rabbitmq.RabbitMqMessagePublisher;
 import antifraud.model.AppUser;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class UserEventListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserEventListener.class);
+    private final RabbitMqMessagePublisher rabbitMqMessagePublisher;
 
     @EventListener
     @Async
     public void logUserRegisteredEvent(UserRegisteredEvent event) {
-        logUserAction("New user registered", event.appUser(), null, null);
+        try {
+            logUserAction("New user registered", event.appUser(), null, null);
+
+            rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
+        } catch (AmqpException ex) {
+            LOGGER.error("Error publishing UserRegisteredEvent: {}", ex.getMessage(), ex);
+        }
     }
 
     @EventListener
     @Async
     public void logUserDeletedEvent(UserDeletedEvent event) {
-        logUserAction("User deleted", event.appUser(), null, null);
+        try {
+            logUserAction("User deleted", event.appUser(), null, null);
+
+            rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
+        } catch (AmqpException ex) {
+            LOGGER.error("Error publishing UserDeletedEvent: {}", ex.getMessage(), ex);
+        }
     }
 
     @EventListener
     @Async
     public void logUserRoleChangedEvent(UserRoleChangedEvent event) {
-        logUserAction("Role changed", event.appUser(), event.oldRole(), event.newRole());
+        try {
+            logUserAction("Role changed", event.appUser(), event.oldRole(), event.newRole());
+
+            rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
+        } catch (AmqpException ex) {
+            LOGGER.error("Error publishing UserRoleChangedEvent: {}", ex.getMessage(), ex);
+        }
     }
 
     @EventListener
     @Async
     public void logUserStatusChangedEvent(UserLockedStatusChangeEvent event) {
-        String status = event.locked() ? "locked" : "unlocked";
-        LOGGER.info("User status changed: Username: {}, Status: {}", event.username(), status);
+        try {
+            String status = event.locked() ? "locked" : "unlocked";
+            LOGGER.info("User status changed: Username: {}, Status: {}", event.username(), status);
+
+            rabbitMqMessagePublisher.sendEvent(EventNames.USER.toString(), event);
+        } catch (AmqpException ex) {
+            LOGGER.error("Error publishing UserLockedStatusChangeEvent: {}", ex.getMessage(), ex);
+        }
     }
 
     private void logUserAction(String action, AppUser user, String oldRole, String newRole) {
