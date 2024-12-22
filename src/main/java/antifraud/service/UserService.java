@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
@@ -43,7 +44,7 @@ public class UserService {
     private final AppUserService appUserService;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     @CacheEvict(value = "users", key = "#registration.username", condition = "#existingUser == null")
     public ResponseEntity<UserResponseDTO> registerUser(UserRegistrationRequestDTO registration) {
         if (appUserRepo.findByUsername(registration.getUsername()).isPresent()) {
@@ -56,7 +57,7 @@ public class UserService {
         return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponseDTO(registeredUser));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     @Cacheable("users")
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<UserResponseDTO> users = appUserRepo.findAllByOrderByIdAsc().stream()
@@ -66,7 +67,7 @@ public class UserService {
         return ResponseEntity.ok(users);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     @CacheEvict(value = "users", key = "#username")
     public ResponseEntity<UserDeletionResponseDTO> deleteUser(String username) {
         AppUser user = appUserRepo.findByUsername(username)
@@ -78,7 +79,7 @@ public class UserService {
         return ResponseEntity.ok(UserDeletionResponseDTO.ofDeletion(username));
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ResponseEntity<UserResponseDTO> changeRole(UserRoleRequestDTO roleRequest) {
         if (!isValidUserRoleChange(roleRequest.getRole())) {
             throw new BadRequestException("Invalid role");
@@ -116,7 +117,7 @@ public class UserService {
         appUserRepo.save(user);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ResponseEntity<OperationResponseDTO> changeLockedStatus(UserStatusRequestDTO statusRequest) {
         AppUser user = appUserRepo.findByUsername(statusRequest.getUsername())
                 .orElseThrow(() -> new NotFoundException("User not found"));

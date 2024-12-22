@@ -18,6 +18,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class AntiFraudService {
     private final StolenCardRepo stolenCardRepo;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @CacheEvict(value = "suspiciousIps", key = "#requestDTO.ip")
     public ResponseEntity<SuspiciousIp> addSuspiciousIp(SuspiciousIpRequestDTO requestDTO) {
         return addEntity(requestDTO, SuspiciousIpRequestDTO::toSuspiciousIp,
@@ -40,20 +41,20 @@ public class AntiFraudService {
                 suspiciousIp -> eventPublisher.publishEvent(new SuspiciousIpAddedEvent(suspiciousIp.getIp())));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     @Cacheable("suspiciousIps")
     public ResponseEntity<List<SuspiciousIp>> getSuspiciousIps() {
         return ResponseEntity.ok(suspiciousIpRepo.findAllByOrderByIdAsc());
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @CacheEvict(value = "suspiciousIps", key = "#ip")
     public ResponseEntity<AntiFraudDeletionResponseDTO<SuspiciousIp>> removeSuspiciousIp(String ip) {
         return removeEntity(ip, suspiciousIpRepo::findByIp, suspiciousIpRepo::delete, "IP address",
                 suspiciousIp -> eventPublisher.publishEvent(new SuspiciousIpRemoveEvent(suspiciousIp.getIp())));
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @CacheEvict(value = "stolenCards", key = "#requestDTO.number")
     public ResponseEntity<StolenCard> addStolenCard(StolenCardRequestDTO requestDTO) {
         return addEntity(requestDTO, StolenCardRequestDTO::toStolenCard,
@@ -61,13 +62,13 @@ public class AntiFraudService {
                 stolenCard -> eventPublisher.publishEvent(new StolenCardAddedEvent(stolenCard.getNumber())));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     @Cacheable("stolenCards")
     public ResponseEntity<List<StolenCard>> getStolenCards() {
         return ResponseEntity.ok(stolenCardRepo.findAllByOrderByIdAsc());
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @CacheEvict(value = "stolenCards", key = "#number")
     public ResponseEntity<AntiFraudDeletionResponseDTO<StolenCard>> removeStolenCard(String number) {
         return removeEntity(number, stolenCardRepo::findByNumber, stolenCardRepo::delete, "card number",

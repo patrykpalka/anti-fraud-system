@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ public class TransactionService {
     private final StolenCardRepo stolenCardRepo;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ResponseEntity<TransactionResponseDTO> addTransaction(TransactionRequestDTO transactionDTO, Authentication authentication) {
         List<String> reasonsForRejection = new ArrayList<>();
         String type = reviewTransaction(transactionDTO, reasonsForRejection);
@@ -78,7 +79,7 @@ public class TransactionService {
         return type.toString();
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ResponseEntity<FeedbackResponseDTO> addFeedback(FeedbackRequestDTO feedbackDTO, Authentication authentication) {
         Transaction transaction = transactionRepo.findById(feedbackDTO.getTransactionId())
                 .orElseThrow(() -> new NotFoundException("Transaction not found"));
@@ -101,7 +102,7 @@ public class TransactionService {
         return ResponseEntity.ok(new FeedbackResponseDTO(transaction));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public ResponseEntity<List<FeedbackResponseDTO>> getHistory(Pageable pageable) {
         Page<Transaction> transactions = transactionRepo.findAllByOrderByIdAsc(pageable);
 
@@ -110,7 +111,7 @@ public class TransactionService {
                 .collect(Collectors.toList()));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(@Valid @ValidCardNumber String number, Pageable pageable) {
         Page<Transaction> transactions = transactionRepo.findAllByNumberOrderByIdAsc(number, pageable);
 

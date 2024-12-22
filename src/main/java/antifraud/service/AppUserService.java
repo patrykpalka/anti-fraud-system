@@ -10,6 +10,7 @@ import antifraud.repo.RoleRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -20,7 +21,7 @@ public class AppUserService {
     private final RoleRepo roleRepo;
     private final PasswordEncoder passwordEncoder;
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public AppUser register(UserRegistrationRequestDTO registration) {
         AppUser appUser = registration.toEntity(passwordEncoder);
 
