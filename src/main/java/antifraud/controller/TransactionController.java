@@ -84,7 +84,7 @@ public class TransactionController {
     })
     public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(
             @PathVariable @Parameter(description = "Card number to get history for", required = true, example = "4000008449433403") String number,
-            @PageableDefault(page = 0, size = 20, sort = "id", direction = Sort.Direction.DESC)
+            @PageableDefault(page = 0, size = 20, sort = "id", direction = Sort.Direction.ASC)
             @Parameter(description = "Pagination parameters") Pageable pageable) {
         return transactionService.getHistoryByNumber(number, pageable);
     }
