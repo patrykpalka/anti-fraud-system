@@ -13,6 +13,5 @@ public interface TransactionRepo extends JpaRepository<Transaction, Long> {
 
     List<Transaction> findAllByDateGreaterThanEqualAndDateLessThanAndNumber
             (LocalDateTime startDate, LocalDateTime endDate, String number);
-    Page<Transaction> findAllByOrderByIdAsc(Pageable pageable);
-    Page<Transaction> findAllByNumberOrderByIdAsc(String number, Pageable pageable);
+    Page<Transaction> findAllByNumber(String number, Pageable pageable);
 }

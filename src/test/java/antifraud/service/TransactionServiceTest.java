@@ -147,13 +147,13 @@ public class TransactionServiceTest {
         );
 
         Page<Transaction> page = new PageImpl<>(transactions, pageable, transactions.size());
-        when(transactionRepo.findAllByOrderByIdAsc(pageable)).thenReturn(page);
+        when(transactionRepo.findAll(pageable)).thenReturn(page);
 
         ResponseEntity<?> response = transactionService.getHistory(pageable);
 
         assertNotNull(response, "Response should not be null.");
         assertEquals(2, ((List<?>) response.getBody()).size(), "The transaction history size should match.");
-        verify(transactionRepo, times(1)).findAllByOrderByIdAsc(pageable);
+        verify(transactionRepo, times(1)).findAll(pageable);
     }
 
     @Test
@@ -165,13 +165,13 @@ public class TransactionServiceTest {
         );
 
         Page<Transaction> page = new PageImpl<>(transactions, pageable, transactions.size());
-        when(transactionRepo.findAllByNumberOrderByIdAsc(cardNumber, pageable)).thenReturn(page);
+        when(transactionRepo.findAllByNumber(cardNumber, pageable)).thenReturn(page);
 
         ResponseEntity<List<FeedbackResponseDTO>> response = transactionService.getHistoryByNumber(cardNumber, pageable);
 
         assertNotNull(response, "Response should not be null.");
         assertEquals(2, response.getBody().size(), "The transaction history size should match.");
-        verify(transactionRepo, times(1)).findAllByNumberOrderByIdAsc(cardNumber, pageable);
+        verify(transactionRepo, times(1)).findAllByNumber(cardNumber, pageable);
     }
 
     @Test

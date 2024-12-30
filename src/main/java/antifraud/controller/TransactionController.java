@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -67,6 +69,7 @@ public class TransactionController {
             @ApiResponse(responseCode = "401", description = "Unauthorized access")
     })
     public ResponseEntity<List<FeedbackResponseDTO>> getHistory(
+            @PageableDefault(page = 0, size = 20, sort = "id", direction = Sort.Direction.ASC)
             @Parameter(description = "Pagination parameters") Pageable pageable) {
         return transactionService.getHistory(pageable);
     }
@@ -81,6 +84,7 @@ public class TransactionController {
     })
     public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(
             @PathVariable @Parameter(description = "Card number to get history for", required = true, example = "4000008449433403") String number,
+            @PageableDefault(page = 0, size = 20, sort = "id", direction = Sort.Direction.DESC)
             @Parameter(description = "Pagination parameters") Pageable pageable) {
         return transactionService.getHistoryByNumber(number, pageable);
     }

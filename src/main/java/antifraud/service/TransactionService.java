@@ -104,7 +104,7 @@ public class TransactionService {
 
     @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public ResponseEntity<List<FeedbackResponseDTO>> getHistory(Pageable pageable) {
-        Page<Transaction> transactions = transactionRepo.findAllByOrderByIdAsc(pageable);
+        Page<Transaction> transactions = transactionRepo.findAll(pageable);
 
         return ResponseEntity.ok(transactions.isEmpty() ? Collections.emptyList() : transactions.stream()
                 .map(FeedbackResponseDTO::new)
@@ -113,7 +113,7 @@ public class TransactionService {
 
     @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public ResponseEntity<List<FeedbackResponseDTO>> getHistoryByNumber(@Valid @ValidCardNumber String number, Pageable pageable) {
-        Page<Transaction> transactions = transactionRepo.findAllByNumberOrderByIdAsc(number, pageable);
+        Page<Transaction> transactions = transactionRepo.findAllByNumber(number, pageable);
 
         if (transactions.isEmpty()) {
             throw new NotFoundException("Transaction not found");
