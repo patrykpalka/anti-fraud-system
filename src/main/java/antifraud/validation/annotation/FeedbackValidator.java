@@ -9,6 +9,7 @@ import jakarta.validation.ConstraintValidatorContext;
  * Validates that the provided feedback value is a valid enum value from {@link TransactionType}.
  */
 public class FeedbackValidator implements ConstraintValidator<ValidFeedback, String> {
+
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         if (value == null) {

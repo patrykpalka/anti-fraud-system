@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class FeedbackResponseDTO {
+
     private long transactionId;
     private long amount;
     private String ip;

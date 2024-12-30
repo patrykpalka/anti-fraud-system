@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class TransactionRequestDTO {
+
     @Min(value = 1)
     private long amount;
 

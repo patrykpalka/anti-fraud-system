@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class TransactionResponseDTO {
+
     private String result;
     private String info;
 }

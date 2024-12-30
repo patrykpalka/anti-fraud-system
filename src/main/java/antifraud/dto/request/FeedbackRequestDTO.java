@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class FeedbackRequestDTO {
+
     private long transactionId;
 
     @ValidFeedback

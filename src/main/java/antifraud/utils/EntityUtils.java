@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class EntityUtils {
+
     /**
      * Adds a new entity to the system after performing necessary validations.
      *

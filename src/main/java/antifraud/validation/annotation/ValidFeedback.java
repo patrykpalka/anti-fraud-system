@@ -16,6 +16,7 @@ import antifraud.enums.TransactionType;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = FeedbackValidator.class)
 public @interface ValidFeedback {
+
     String message() default "Invalid feedback value";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};

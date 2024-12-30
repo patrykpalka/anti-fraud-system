@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class FailedLoginAttempt {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

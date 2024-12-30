@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class UserDeletionResponseDTO {
+
     private String username;
     private String status;
 

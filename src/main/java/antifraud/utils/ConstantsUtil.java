@@ -5,6 +5,7 @@ import antifraud.enums.TransactionType;
 import antifraud.model.Transaction;
 
 public class ConstantsUtil {
+
     public static void updateTransactionLimit(String feedback, Transaction transaction) {
         TransactionType feedbackTransactionType = TransactionType.valueOf(feedback);
         TransactionType resultTransactionType = TransactionType.valueOf(transaction.getResult());

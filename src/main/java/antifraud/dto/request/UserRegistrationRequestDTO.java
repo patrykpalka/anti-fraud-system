@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Data
 public class UserRegistrationRequestDTO {
+
     @NotBlank (message = "Username cannot be empty")
     private String username;
 

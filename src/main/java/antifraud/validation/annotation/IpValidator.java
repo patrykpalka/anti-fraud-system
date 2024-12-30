@@ -10,6 +10,7 @@ import java.net.UnknownHostException;
  * Validates that the provided IP address is in a valid format (IPv4).
  */
 public class IpValidator implements ConstraintValidator<ValidIp, String> {
+
     @Override
     public void initialize(ValidIp constraintAnnotation) {
         // No initialization needed for this validator.

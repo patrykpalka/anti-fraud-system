@@ -7,6 +7,7 @@ import lombok.Data;
 
 @Data
 public class SuspiciousIpRequestDTO {
+
     @NotBlank
     @ValidIp
     private String ip;

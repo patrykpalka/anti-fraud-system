@@ -7,6 +7,7 @@ import antifraud.enums.TransactionType;
 import java.util.List;
 
 public class AmountValidator implements TransactionValidator {
+
     @Override
     public TransactionType validate(TransactionRequestDTO dto, List<String> reasons, TransactionType currentType) {
         if (dto.getAmount() > Constants.MAX_MANUAL_PROCESSING) {

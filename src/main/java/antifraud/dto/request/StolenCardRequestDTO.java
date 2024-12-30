@@ -7,9 +7,10 @@ import lombok.Data;
 
 @Data
 public class StolenCardRequestDTO {
+
     @NotBlank
     @ValidCardNumber
-    String number;
+    private String number;
 
     public StolenCard toStolenCard() {
         return new StolenCard(number);

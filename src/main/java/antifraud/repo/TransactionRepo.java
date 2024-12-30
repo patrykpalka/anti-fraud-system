@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TransactionRepo extends JpaRepository<Transaction, Long> {
+
     List<Transaction> findAllByDateGreaterThanEqualAndDateLessThanAndNumber
             (LocalDateTime startDate, LocalDateTime endDate, String number);
     Page<Transaction> findAllByOrderByIdAsc(Pageable pageable);

@@ -9,6 +9,7 @@ import jakarta.validation.ConstraintValidatorContext;
  * is numeric, and has a length of 16 digits.
  */
 public class CardNumberValidator implements ConstraintValidator<ValidCardNumber, String> {
+
     @Override
     public void initialize(ValidCardNumber constraintAnnotation) {
         // No initialization needed for this validator.

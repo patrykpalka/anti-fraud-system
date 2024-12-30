@@ -14,6 +14,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = IpValidator.class)
 public @interface ValidIp {
+
     String message() default "Invalid IP";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};

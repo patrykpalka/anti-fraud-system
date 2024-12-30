@@ -16,6 +16,7 @@ import antifraud.enums.RegionNames;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = RegionValidator.class)
 public @interface ValidRegion {
+
     String message() default "Invalid region";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};

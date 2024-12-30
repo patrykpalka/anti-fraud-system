@@ -10,6 +10,7 @@ import java.util.Arrays;
  * Validates that the provided region value is a valid entry in the {@link RegionNames} enum.
  */
 public class RegionValidator implements ConstraintValidator<ValidRegion, String> {
+
     @Override
     public void initialize(ValidRegion constraintAnnotation) {
         // No initialization needed for this validator.

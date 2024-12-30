@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class UserStatusRequestDTO {
+
     @NotBlank
     private String username;
 

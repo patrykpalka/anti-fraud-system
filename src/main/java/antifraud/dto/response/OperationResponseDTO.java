@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class OperationResponseDTO {
+
     private String status;
 
     public static OperationResponseDTO ofLockStatus(AppUser user) {

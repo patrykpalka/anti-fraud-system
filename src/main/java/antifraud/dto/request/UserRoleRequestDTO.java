@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class UserRoleRequestDTO {
+
     @NotBlank
     private String username;
 
