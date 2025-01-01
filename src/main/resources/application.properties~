@@ -22,12 +22,14 @@ spring.jpa.hibernate.ddl-auto=create-drop
 # Security settings
 security.failed-login-threshold=5
 
-# JWT Settings
-jwt.secret=3cZx0g4l5rD8mEdN5zGZ1Vv1QzpovFf6XOx+Xkp5qMd
-jwt.expiration=3600
-jwt.issuer=anti-fraud-system
-
 # Cache settings
 spring.cache.type=redis
 spring.data.redis.host=localhost
 spring.data.redis.port=6379
+
+# RabbitMQ settings
+spring.rabbitmq.host=localhost
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=guest
+spring.rabbitmq.password=guest
+spring.rabbitmq.virtual-host=/

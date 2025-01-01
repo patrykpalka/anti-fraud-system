@@ -23,7 +23,7 @@ public class AuthorizationRuleConfigurer {
         auth.requestMatchers(HttpMethod.POST, "/api/auth/user").permitAll();
         auth.requestMatchers("/actuator/health").permitAll();
         auth.requestMatchers("/actuator/shutdown").permitAll();
-        auth.requestMatchers("/swagger-ui/index.html").permitAll();
+        auth.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll();
     }
 
     private void configureAdminEndpoints(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {

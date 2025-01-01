@@ -1,7 +1,5 @@
 package antifraud.config;
 
-import antifraud.config.jwt.JwtAuthenticationFilter;
-import antifraud.config.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final AuthorizationRuleConfigurer authorizationRuleConfigurer;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationFilter customAuthenticationFilter) throws Exception {
@@ -50,13 +47,10 @@ public class SecurityConfig {
     @Bean
     public CustomAuthenticationFilter customAuthenticationFilter(
             AuthenticationManager authenticationManager,
-            JwtTokenProvider jwtTokenProvider,
             CustomAuthenticationSuccessHandler successHandler,
-            CustomAuthenticationFailureHandler failureHandler
-    ) {
+            CustomAuthenticationFailureHandler failureHandler) {
         return new CustomAuthenticationFilter(
                 authenticationManager,
-                jwtTokenProvider,
                 successHandler,
                 failureHandler
         );
