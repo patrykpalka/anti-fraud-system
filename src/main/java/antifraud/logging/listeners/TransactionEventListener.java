@@ -1,10 +1,10 @@
-package antifraud.logging.listener;
+package antifraud.logging.listeners;
 
 import antifraud.enums.EventNames;
 import antifraud.logging.events.transaction.FeedbackAddedEvent;
 import antifraud.logging.events.transaction.FraudulentTransactionDetectedEvent;
 import antifraud.logging.events.transaction.TransactionCreatedEvent;
-import antifraud.logging.rabbitmq.RabbitMqMessagePublisher;
+import antifraud.messaging.RabbitMqMessagePublisher;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

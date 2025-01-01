@@ -16,6 +16,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
@@ -33,7 +34,7 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
     private int failedLoginThreshold;
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
         // Save the failed login attempt

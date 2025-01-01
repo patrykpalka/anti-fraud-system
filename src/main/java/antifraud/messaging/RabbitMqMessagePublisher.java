@@ -1,4 +1,4 @@
-package antifraud.logging.rabbitmq;
+package antifraud.messaging;
 
 import antifraud.enums.EventNames;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class RabbitMqMessagePublisher {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqMessagePublisher.class);
 
     @Retryable(
-            value = AmqpException.class,
+            retryFor = AmqpException.class,
             maxAttempts = 5,
             backoff = @Backoff(delay = 2000) // Retry after 2 seconds
     )

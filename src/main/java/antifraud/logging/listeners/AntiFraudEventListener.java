@@ -1,11 +1,11 @@
-package antifraud.logging.listener;
+package antifraud.logging.listeners;
 
 import antifraud.enums.EventNames;
 import antifraud.logging.events.antifraud.StolenCardAddedEvent;
 import antifraud.logging.events.antifraud.StolenCardRemoveEvent;
 import antifraud.logging.events.antifraud.SuspiciousIpAddedEvent;
 import antifraud.logging.events.antifraud.SuspiciousIpRemoveEvent;
-import antifraud.logging.rabbitmq.RabbitMqMessagePublisher;
+import antifraud.messaging.RabbitMqMessagePublisher;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 @Configuration
 public class JacksonConfig {
 
+    // Bean for handling JSON serialization and deserialization with specific date/time formatting
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();

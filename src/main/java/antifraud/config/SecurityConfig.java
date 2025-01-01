@@ -48,10 +48,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CustomAuthenticationFilter customAuthenticationFilter(AuthenticationManager authenticationManager,
-                                                                 JwtTokenProvider jwtTokenProvider,
-                                                                 CustomAuthenticationSuccessHandler successHandler,
-                                                                 CustomAuthenticationFailureHandler failureHandler) {
+    public CustomAuthenticationFilter customAuthenticationFilter(
+            AuthenticationManager authenticationManager,
+            JwtTokenProvider jwtTokenProvider,
+            CustomAuthenticationSuccessHandler successHandler,
+            CustomAuthenticationFailureHandler failureHandler
+    ) {
         return new CustomAuthenticationFilter(
                 authenticationManager,
                 jwtTokenProvider,

@@ -1,11 +1,11 @@
-package antifraud.logging.listener;
+package antifraud.logging.listeners;
 
 import antifraud.enums.EventNames;
 import antifraud.logging.events.user.UserDeletedEvent;
 import antifraud.logging.events.user.UserRegisteredEvent;
 import antifraud.logging.events.user.UserRoleChangedEvent;
 import antifraud.logging.events.user.UserLockedStatusChangeEvent;
-import antifraud.logging.rabbitmq.RabbitMqMessagePublisher;
+import antifraud.messaging.RabbitMqMessagePublisher;
 import antifraud.model.AppUser;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

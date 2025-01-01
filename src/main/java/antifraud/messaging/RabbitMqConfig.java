@@ -1,4 +1,4 @@
-package antifraud.logging.config;
+package antifraud.messaging;
 
 import antifraud.enums.EventNames;
 import org.springframework.amqp.core.Queue;

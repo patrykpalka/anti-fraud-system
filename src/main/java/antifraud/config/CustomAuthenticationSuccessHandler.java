@@ -4,7 +4,6 @@ import antifraud.exception.NotFoundException;
 import antifraud.logging.events.authentication.SuccessfulLoginEvent;
 import antifraud.repo.AppUserRepo;
 import antifraud.repo.FailedLoginAttemptRepo;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,9 +11,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 
 @Component
@@ -26,9 +25,9 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+                                        Authentication authentication) {
         // Reset failed attempts counter
         String username = authentication.getName();
         appUserRepo.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
